@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sports Player And Organizer</title>
+
+  <!-- Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script>
+
+  </script>
+
+  <!-- Spinner Style -->
+  <style>
+    #waiting {
+      padding: 50px;
+      font-size: 60px;
+      color: lightgray;
+      position: fixed;
+      left: 45%;
+      top: 40%;
+      display: none;
+      text-align: center;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+    .card-img-fixed {
+  height: 120px;
+  object-fit: contain; /* Ensures image fits without distortion */
+  width: 100%;          /* Optional: Ensures full card width */
+}
+  </style>
+
+  <!-- Preview Function -->
+  <script>
+    function showPrev(fileRef, prevRef) {
+      const [file] = fileRef.files;
+      if (file) {
+        prevRef.src = URL.createObjectURL(file);
+      }
+    }
+  </script>
+
+  <!-- AJAX Logic -->
+  <script>
+    $(document).ready(function () {
+
+      // Signup AJAX
+      $("#sendtoserver").click(function () {
+        let email = $("#txtEmail").val().trim();
+        let pwd = $("#txtPwd").val().trim();
+        let utype = $("#utype").val();
+
+        // Final validation check
+        if ($("#errMsgE").hasClass("text-danger") || email === "") {
+          $("#txtEmail").focus();
+          return;
+        }
+        if ($("#lblPwd").text().includes("❌") || pwd === "") {
+          $("#txtPwd").focus();
+          return;
+        }
+        if (utype === "none") {
+          alert("Please select a user type.");
+          $("#utype").focus();
+          return;
+        }
+
+        // All valid → Send AJAX
+        $.ajax({
+          type: "GET",
+          url: "/signup-user",
+          data: {
+            txtEmail: email,
+            txtPwd: pwd,
+            utype: utype
+          },
+          success: function (response) {
+            if (typeof response === "object") {
+              alert(JSON.stringify(response));
+            } else {
+              alert(response);
+            }
+
+            // Reset form
+            $("#txtEmail, #txtPwd").val("");
+            $("#utype").val("none");
+            $("#errMsgE").html("");
+            $("#lblPwd").html("");
+            $("#divSignup").modal("hide");
+          }
+        });
+      });
+
+      // Login AJAX
+      $(document).ready(function () {
+        $("#btnLoginAjax").click(function () {
+          const email = $("#txtEmailLogin").val();
+          const pwd = $("#txtPwdLogin").val();
+
+          let obj = {
+            type: "GET",
+            url: "/do-login",
+            data: {
+              emailid: email,
+              password: pwd
+            }
+          };
+
+          $.ajax(obj).then(
+            function (response) {
+              if (response == "Blocked")
+                alert("Your account is blocked.");
+              else if (response === "Invalid")
+                alert("Invalid emailid or Password");
+              else if (response == "Players") {
+                localStorage.setItem("activeUser", email);
+                location.href = "dash-player.html";
+              }
+
+              else if (response == "Organizers") {
+                localStorage.setItem("activeUser", email);
+                location.href = "dash-organizer.html";
+              }
+
+              else if (response == "Admin") {
+                localStorage.setItem("activeUser", email);
+                location.href = "dash-Admin.html";
+              }
+
+            }
+          ).fail(function (err) {
+            alert("Try again!");
+          });
+        });
+      }); // ✅ This closes the inner document.ready
+
+    }); // ✅ This closes the outer document.ready
+
+
+  </script>
+</head>
+
+<body>
+
+  <!-- Spinner -->
+  <div id="waiting">
+    <i class="fa-solid fa-spinner fa-spin-pulse"></i>
+  </div>
+
+  <!-- Navbar with Logo, App Name (left), and Buttons (right) -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+
+      <!-- Logo + WebApp Name -->
+      <div class="d-flex align-items-center">
+        <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+        <span class="navbar-brand mb-0 h1">Body Hustle</span>
+      </div>
+
+      <!-- Right Side Buttons -->
+      <div class="ms-auto d-flex gap-2">
+        <button class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#divSignup">Signup</button>
+        <button class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#divLogin">Login</button>
+        <a href="help-us.html" class="btn btn-outline-light">Help Us</a>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ✅ Signup Modal -->
+  <div class="modal fade" tabindex="-1" id="divSignup">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Signup</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="txtEmail" class="form-label">Email ID</label>
+            <input type="email" class="form-control" id="txtEmail" name="txtEmail" required>
+            <span id="errMsgE" class="text-danger fw-semibold"></span>
+          </div>
+          <div class="mb-3">
+            <label for="txtPwd" class="form-label">Password</label>
+            <input type="password" class="form-control" id="txtPwd" name="txtPwd" required>
+            <span id="lblPwd" class="text-danger fw-semibold"></span>
+          </div>
+          <div class="mb-3">
+            <label for="utype" class="form-label">User Type</label>
+            <select class="form-select" id="utype" name="utype" required>
+              <option value="none">Select</option>
+              <option value="Players">Player</option>
+              <option value="Organizers">Organizer</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="button" value="Signup" class="btn btn-dark" id="sendtoserver">
+          <span id="errEmail" class="ms-3 text-danger"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="divLogin" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content border-dark">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">Login</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-dark">
+          <div class="mb-3">
+            <label for="txtEmailLogin">Email Id</label>
+            <input type="email" class="form-control" id="txtEmailLogin" required>
+            <span id="errEmailLogin" class="text-danger fw-bold"></span>
+          </div>
+          <div class="mb-3">
+            <label for="txtPwdLogin">Password</label>
+            <input type="password" class="form-control" id="txtPwdLogin" required>
+            <span id="errPwdLogin" class="text-danger fw-bold"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="button" class="btn btn-dark" value="Login" id="btnLoginAjax">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid px-0">
+    <img src="pics/allsports.jpg" alt="Banner" class="img-fluid w-100" style="max-height: 350px; object-fit: contain;">
+  </div>
+
+
+  <!-- Our Services Heading -->
+  <div class="container-fluid px-0 p-2">
+   <div class="bg-dark text-white text-center py-2">
+      <h2 class="m-0">Our Services</h2>
+    </div>
+  </div>
+
+  <!-- Our Services Cards -->
+  <div class="container mb-2 p-2">
+    <div class="row text-center g-4 justify-content-center">
+
+      <!-- Tournaments Card -->
+     <div class="col-md-3">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <img src="pics/trn.png" alt="Tournaments" class="img-fluid mb-3 card-img-fixed">
+      <h5 class="card-title fw-bold">Tournaments</h5>
+      <p>Discover and participate in exciting sports tournaments across the region.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Organizers Card -->
+<div class="col-md-3">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <img src="pics/orgser.png" alt="Organizers" class="img-fluid mb-3 card-img-fixed">
+      <h5 class="card-title fw-bold">Organizers</h5>
+      <p>Manage events, post tournaments, and connect with players seamlessly.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Sports Persons Card -->
+<div class="col-md-3">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <img src="pics/sportsprsn.png" alt="Sports Persons" class="img-fluid mb-3 card-img-fixed">
+      <h5 class="card-title fw-bold">Sports Persons</h5>
+      <p>Join events, showcase your talent, and grow your sports journey.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Generative AI Integration Card -->
+<div class="col-md-3">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body">
+      <img src="pics/770.jpg" alt="AI Integration" class="img-fluid mb-3 card-img-fixed">
+      <h5 class="card-title fw-bold">Generative AI Support</h5>
+      <p>AI-powered insights, match predictions, and intelligent event recommendations.</p>
+    </div>
+  </div>
+</div>
+      <!-- Our Services Heading -->
+
+    </div>
+  </div>
+  <section class="container-fluid px-0">
+    <div class="bg-dark text-white text-center py-2">
+      <h2 class="m-0">Mission</h2>
+    </div>
+
+    <div class="row text-center align-items-center mx-0 border border-dark" style="border-width: 5px !important;">
+
+      <div class="col-md-6 py-4 border-end border-dark" style="border-width: 5px !important;">
+        <img src="pics/mission.png" alt="Mission Image" class="img-fluid" style="max-height: 250px;">
+      </div>
+
+      <div class="col-md-6 py-4 text-start">
+        <h3 class="fw-bold text-dark">The Body Hustle Story</h3>
+        <p class="mb-2">
+          At <strong>Body Hustle</strong>, we aim to transform the way sports communities connect and thrive. We bridge
+          the gap between organizers and players by providing a centralized platform to streamline every aspect of
+          sports event management.
+        </p>
+        <p class="mb-2">
+          Our mission is to empower tournament hosts to manage events effortlessly, enable players to explore
+          opportunities with ease, and support collaboration between all stakeholders involved in the sports ecosystem.
+        </p>
+        <p class="mb-0">
+          With innovation, transparency, and accessibility at our core, we strive to nurture talent, promote fair play,
+          and elevate the experience of sports for everyone involved.
+        </p>
+      </div>
+
+    </div>
+  </section>
+  <section class="container-fluid px-0">
+    <div class="bg-dark text-white text-center py-2">
+      <h2 class="m-0">Meet The Developers</h2>
+    </div>
+
+
+
+   <div class="row text-center align-items-center mx-0 border border-dark" style="border-width: 5px !important;">
+
+    <div class="col-md-6 py-4 border-end border-dark d-flex flex-column align-items-center" style="border-width: 5px !important;">
+        <h4 class="mb-4 text-uppercase"><strong>UNDER THE GUIDANCE OF</strong></h4>
+
+        <div class="d-flex align-items-start border rounded p-3 shadow-sm" style="background-color: #f9f9f9; width: 100%; max-width: 500px;">
+            <div class="rounded-circle overflow-hidden border border-secondary me-3"
+                 style="width: 120px; height: 120px; flex-shrink: 0;">
+                <img src="pics/rajesh sir.jpg" alt="Author Image" class="img-fluid"
+                     style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="text-start flex-grow-1"> <h4><strong>Mr. Rajesh Bansal</strong></h4>
+                <p class="mb-1"><i class="fas fa-book-open text-primary me-2"></i>Author of "Real Java" book</p>
+                <p class="mb-1"><i class="fas fa-history text-primary me-2"></i>25+ Years in Training & Development</p>
+                <p class="mb-1"><i class="fas fa-building text-primary me-2"></i>Founder: <strong>realJavaOnline.com</strong></p>
+                <p class="mb-1"><i class="fas fa-laptop-code text-primary me-2"></i>Expert in Java (J2SE, J2EE), C++, PHP, Python</p>
+                <p class="mb-1"><i class="fas fa-cogs text-primary me-2"></i>Skilled in AngularJS, Android, MERN Stack</p>
+                <p class="mb-1"><i class="fas fa-envelope text-primary me-2"></i><strong>Email:</strong> bcebti@gmail.com</p>
+                <p class="mb-0"><i class="fas fa-phone-alt text-primary me-2"></i><strong>Contact:</strong> 98722-46056</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 py-4 d-flex flex-column align-items-center">
+        <h4 class="mb-4 text-uppercase"><strong>DEVELOPED BY</strong></h4>
+
+        <div class="d-flex align-items-start border rounded p-3 shadow-sm" style="background-color: #f9f9f9; width: 100%; max-width: 500px;">
+            <div class="rounded-circle overflow-hidden border border-secondary me-3"
+                 style="width: 120px; height: 120px; flex-shrink: 0;">
+                <img src="pics/me.jpg" alt="Developer Image" class="img-fluid"
+                     style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="text-start flex-grow-1"> <h4><strong>Mr. Arsh Kumar</strong></h4>
+                <p class="mb-1"><i class="fas fa-graduation-cap text-primary me-2"></i>Studying Computer Science Engineering at COEM Rampura Phul</p>
+                <p class="mb-1"><i class="fas fa-clock text-primary me-2"></i>45 Days in Training & Development</p>
+                <p class="mb-1"><i class="fas fa-building text-primary me-2"></i>Founder: <strong>Body Hustle</strong></p>
+                <p class="mb-1"><i class="fas fa-laptop-code text-primary me-2"></i>Expert in C, C++, PHP, Python</p>
+                <p class="mb-1"><i class="fas fa-cogs text-primary me-2"></i>Skilled in AngularJS, NodeJS</p>
+                <p class="mb-1"><i class="fas fa-envelope text-primary me-2"></i><strong>Email:</strong> kumararsh228@gmail.com</p>
+                <p class="mb-0"><i class="fas fa-phone-alt text-primary me-2"></i><strong>Contact:</strong> 97805-70294</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+<section class="container-fluid px-0">
+    <div class="bg-dark text-white text-center py-2">
+      <h2 class="m-0">Reach Us</h2>
+    </div>
+    <div class="row text-center align-items-stretch mx-0 border border-dark" style="border-width: 5px !important;">
+
+        <div class="col-md-6 py-4 border-end border-dark d-flex flex-column align-items-center justify-content-center" style="border-width: 5px !important;">
+            <h4 class="mb-4 text-uppercase"><strong>FIND US HERE</strong></h4>
+            <div class="map-container rounded border border-secondary shadow-sm" style="width: 100%; max-width: 500px; height: 350px; overflow: hidden;">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1228.445432505148!2d75.23701957538727!3d30.315340799933537!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3910c405649b9c6f%3A0x619d2af5acd9a5c1!2sCollege%20of%20Engineering%20%26%20Management%2C%20Punjabi%20University%20Neighbourhood%20Campus%2C%20Rampura%20Phul!5e0!3m2!1sen!2sin!4v1753133986787!5m2!1sen!2sin" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade""
+                    width="100%"
+                    height="100%"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="loading"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+               
+            </div>
+            <h5 class="mt-3 text-uppercase fw-bold">COEM, Rampura Phul</h5>
+        </div>
+
+        <div class="col-md-6 py-4 d-flex flex-column align-items-center justify-content-center">
+            <h4 class="mb-4 text-uppercase"><strong>GET IN TOUCH</strong></h4>
+            <div class="contact-details-card border rounded p-4 shadow-sm" style="background-color: #f9f9f9; width: 100%; max-width: 450px; min-height: 350px; display: flex; flex-direction: column; justify-content: space-between;">
+                <p class="lead fw-bold mb-3">Connect with us directly!</p>
+
+                <ul class="list-unstyled text-start flex-grow-1 d-flex flex-column justify-content-around mb-0">
+                    <li class="d-flex align-items-start">
+                        <i class="fas fa-map-marker-alt text-primary me-3 fa-2x"></i>
+                        <div>
+                            <strong>Our Location:</strong><br>
+                            COEM Campus, Rampura Phul<br>
+                            Bathinda, Punjab - 151103, India
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <i class="fas fa-phone-alt text-primary me-3 fa-2x"></i>
+                        <div>
+                            <strong>Call Me:</strong><br>
+                            <a href="tel:+919780570294" class="text-decoration-none text-dark">+91 97805-70294</a>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <i class="fas fa-envelope text-primary me-3 fa-2x"></i>
+                        <div>
+                            <strong>Email Me:</strong><br>
+                            <a href="mailto:kumararsh228@gmail.com" class="text-decoration-none text-dark">kumararsh228@gmail.com</a>
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <i class="fab fa-whatsapp text-primary me-3 fa-2x"></i>
+                        <div>
+                            <strong>WhatsApp:</strong><br>
+                            <a href="https://wa.me/919780570294" class="text-decoration-none text-dark" target="_blank">+91 97805-70294</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-dark text-white text-center py-3">
+    © 2025 Body Hustle All rights reserved.
+</footer>
+</body>
+<script>
+  $(document).ready(function () {
+    // ✅ Email Validation on Keyup
+    $("#txtEmail").keyup(function () {
+      let email = $(this).val();
+      let regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+      if (email === "") {
+        $("#errMsgE").html("❌ Email is required.")
+          .removeClass("text-success").addClass("text-danger");
+      } else if (!regex.test(email)) {
+        $("#errMsgE").html("❌ Invalid Email ID.")
+          .removeClass("text-success").addClass("text-danger");
+      } else {
+        $("#errMsgE").html("✅ Valid Email.")
+          .removeClass("text-danger").addClass("text-success");
+      }
+    });
+
+    // ✅ Password Validation on Blur
+    $("#txtPwd").blur(function () {
+      let pwd = $(this).val();
+      let regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+      if (pwd === "") {
+        $("#lblPwd").html("❌ Password is required.")
+          .css("color", "red");
+      } else if (!regex.test(pwd)) {
+        $("#lblPwd").html("❌ Must have 1 uppercase, 1 number, 8+ characters.")
+          .css("color", "red");
+      } else {
+        $("#lblPwd").html("✅ Strong Password.")
+          .css("color", "green");
+      }
+    });
+  });
+  $(document).ready(function () {
+    //  Email Validation for Login
+    $("#txtEmailLogin").keyup(function () {
+      let email = $(this).val();
+      let regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+      if (email === "") {
+        $("#errEmailLogin").html("❌ Email is required.")
+          .removeClass("text-success").addClass("text-danger");
+      } else if (!regex.test(email)) {
+        $("#errEmailLogin").html("❌ Invalid Email ID.")
+          .removeClass("text-success").addClass("text-danger");
+      } else {
+        $("#errEmailLogin").html("✅ Valid Email.")
+          .removeClass("text-danger").addClass("text-success");
+      }
+    });
+
+    // ✅ Password Validation for Login
+    $("#txtPwdLogin").blur(function () {
+      let pwd = $(this).val();
+      let regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+      if (pwd === "") {
+        $("#errPwdLogin").html("❌ Password is required.")
+          .removeClass("text-success").addClass("text-danger");
+      } else if (!regex.test(pwd)) {
+        $("#errPwdLogin").html("❌ Must have 1 uppercase, 1 number, 8+ characters.")
+          .removeClass("text-success").addClass("text-danger");
+      } else {
+        $("#errPwdLogin").html("✅ Strong Password.")
+          .removeClass("text-danger").addClass("text-success");
+      }
+    });
+  });
+
+</script>
+
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+
+  </head>
+  </head>
+<script>
+  function showUser()
+  {
+   let activeUser=localStorage.getItem("activeUser");
+   document.getElementById("welcome").innerHTML=activeUser;
+  }
+  function doLogout(){
+    localStorage.removeItem("activeUser");
+    location.href="index.html";
+  }
+</script>
+  <body class="bg-light" onload="showUser();">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+    
+    <!-- Left: Logo + Text -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+      <span class="fw-bold">Body Hustle</span>
+    </a>
+
+    <!-- Right: Welcome Text -->
+    <div class="text-white me-3">
+      Welcome: <span id="welcome"></span>
+    </div>
+
+  </div>
+</nav>
+<div class="container text-center py-5">
+    <h2 class="fw-bold mb-5">Welcome to Your Player Dashboard</h2>
+    <div class="row justify-content-center g-4">
+
+      <!-- My Profile -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics/project-manager.png" class="card-img-top mx-auto d-block mt-4" style="width: 150px;" alt="Profile">
+          <div class="card-body">
+            <h5 class="card-title">My Profile</h5>
+            <a href="profile-player.html" class="btn btn-dark">View Profile</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tournaments -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics/stadium.png" class="card-img-top mx-auto d-block mt-4" style="width: 150px;" alt="Tournaments">
+          <div class="card-body">
+            <h5 class="card-title">Tournaments</h5>
+            <a href="tournamentFinder.html" class="btn btn-dark">Explore Tournaments</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics/gear.png" class="card-img-top mx-auto d-block mt-4" style="width: 150px;" alt="Settings">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
+            <input type="button" class="btn btn-dark" value="Edit Settings" data-bs-toggle="modal" data-bs-target="#divSettings"> 
+          </div>
+        </div>
+      </div>
+
+      <!-- Update Password Modal -->
+<!-- Update Password Modal -->
+<div class="modal fade" id="divSettings" tabindex="-1" aria-labelledby="updatePasswordLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updatePasswordLabel">Update Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4">
+        <div class="mb-3 text-start">
+          <label for="email" class="form-label">Email ID</label>
+          <input type="email" class="form-control" id="email" placeholder="name@example.com">
+        </div>
+        <div class="mb-3 text-start">
+          <label for="oldPassword" class="form-label">Old Password</label>
+          <input type="password" class="form-control" id="oldPassword" placeholder="Enter old password">
+        </div>
+        <div class="mb-3 text-start">
+          <label for="newPassword" class="form-label">New Password</label>
+          <input type="password" class="form-control" id="newPassword" placeholder="Enter new password">
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4">
+        <button type="button" class="btn btn-dark w-100"id="btnUpdatePass">Update Password</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+       
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+            
+          <img src="pics/l.png" class="card-img-top mx-auto d-block mt-4" style="width: 150px;" alt="Logout">
+          <div class="card-body">
+            <h5 class="card-title">Logout</h5>
+            <a href="#" class="btn btn-dark"onclick="doLogout();">Log Out</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
+    <!-- ✅ Load Bootstrap Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- ✅ Load jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- ✅ Custom JS to handle button click -->
+<script>
+  $("#btnUpdatePass").click(function () {
+    let email = $("#email").val();
+    let oldpass = $("#oldPassword").val();
+    let newpass = $("#newPassword").val();
+  
+    // Basic validation (optional)
+    if (!email || !oldpass || !newpass) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    $.get("/do-change-password", {
+      emailid: email,
+      oldpass: oldpass,
+      newpass: newpass
+    }, function (response) {
+      alert(response); // Show server response
+      if (response.includes("Successfully")) {
+        $("#divSettings").modal('hide'); // Close modal on success
+        $("#email, #oldPassword, #newPassword").val(""); // Clear fields
+      }
+    });
+  });
+</script>
+
+ <footer class="bg-dark text-white text-center py-3 mt-5"style="transform:translateY(109px);">
+    &copy; 2025 Body Hustle All rights reserved.
+  </footer>
+  </body>
+</html>

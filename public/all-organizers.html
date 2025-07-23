@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="orgModule">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Organizers | Sports App</title>
+
+  <!-- AngularJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    var orgModule = angular.module("orgModule", []);
+    orgModule.controller("orgController", function ($scope, $http) {
+      $scope.orgArray = [];
+
+      $scope.fetchAll = function () {
+        $http.get("/fetchAllOrganizer").then(
+          function (response) {
+            $scope.orgArray = response.data;
+          },
+          function (error) {
+            alert("Error: " + JSON.stringify(error.data));
+          }
+        );
+      };
+
+      $scope.selectedOrg = {};
+      $scope.showDetails = function (index) {
+        $scope.selectedOrg = $scope.orgArray[index];
+      };
+    });
+     function doLogout(){
+    localStorage.removeItem("activeUser");
+    location.href="index.html";
+  }
+  </script>
+</head>
+
+<body ng-controller="orgController" ng-init="fetchAll()" class="bg-light pt-0 ">
+ <nav class="navbar navbar-dark bg-dark mb-2">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center ps-1" href="#">
+      <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+      <span class="fw-bold">Body Hustle</span>
+    </a>
+    <a href="#" class="btn btn-dark ms-auto text-light border border-light" onclick="doLogout();">Log Out</a>
+  </div>
+</nav>
+  <div class="container my-4">
+    <h3 class="text-center mb-4 text-dark fw-bold">All Organizers</h3>
+
+    <div class="row">
+      <div class="col-md-4 mb-4" ng-repeat="org in orgArray">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+          <img ng-src="{{org.reg_pic || 'default.jpg'}}" class="card-img-top img-fluid" style="height: 250px; object-fit: cover;" alt="Organizer Image" />
+          <div class="card-body">
+            <h5 class="card-title">{{org.org_name}}</h5>
+            <p class="card-text"><strong>City:</strong> {{org.city}}</p>
+            <p class="card-text"><strong>Head:</strong> {{org.head_name}}</p>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+              data-bs-target="#orgModal" ng-click="showDetails($index)">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="orgModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Organizer Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            <img ng-src="{{selectedOrg.reg_pic || 'default.jpg'}}" class="rounded-circle shadow-sm" width="150" height="150" />
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Email:</strong> {{selectedOrg.email}}</p>
+              <p><strong>Organization:</strong> {{selectedOrg.org_name}}</p>
+              <p><strong>Reg. No:</strong> {{selectedOrg.reg_no}}</p>
+              <p><strong>City:</strong> {{selectedOrg.city}}</p>
+              <p><strong>Address:</strong> {{selectedOrg.addr}}</p>
+              <p><strong>Sports:</strong> {{selectedOrg.sports}}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Website:</strong> {{selectedOrg.website}}</p>
+              <p><strong>Instagram:</strong> {{selectedOrg.insta}}</p>
+              <p><strong>Head Name:</strong> {{selectedOrg.head_name}}</p>
+              <p><strong>Contact:</strong> {{selectedOrg.contact}}</p>
+              <p><strong>Other Info:</strong> {{selectedOrg.otherinfo}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+   <footer class="bg-dark text-white text-center py-3 mt-5"style="transform:translateY(85px);">
+    &copy; 2025 Body Hustle All rights reserved.
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+  </head>
+  <script>
+    function showUser()
+  {
+   let activeUser=localStorage.getItem("activeUser");
+   document.getElementById("welcome").innerHTML=activeUser;
+  }
+  </script>
+  <body class="bg-light"onload="showUser();">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+    
+    <!-- Left: Logo + Text -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+      <span class="fw-bold">Body Hustle</span>
+    </a>
+
+    <!-- Right: Welcome Text -->
+    <div class="text-white me-3">
+      Welcome: <span id="welcome"></span>
+    </div>
+
+  </div>
+</nav>
+
+<div class="container text-center py-5">
+    <h2 class="fw-bold mb-5">Welcome to Your Admin Dashboard</h2>
+    <div class="row justify-content-center g-4">
+
+      <!-- My Profile -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics/useradminconsole.png" class="card-img-top mx-auto d-block mt-4" style="width: 160px;height:150px" alt="Profile">
+          <div class="card-body">
+            <h5 class="card-title">User Console</h5>
+            <a href="admin-users-console.html" class="btn btn-dark">View Profile</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tournaments -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics//organers.jpg" class="card-img-top mx-auto d-block mt-4" style="width: 150px;height:150px;" alt="Tournaments">
+          <div class="card-body">
+            <h5 class="card-title">All Organizers</h5>
+            <a href="all-organizers.html" class="btn btn-dark">All Organizers</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="col-md-3">
+        <div class="card shadow-sm"style="min-height: 300px;">
+          <img src="pics/playersall.png" class="card-img-top mx-auto d-block mt-4" style="width: 180px;height:150px" alt="Settings">
+          <div class="card-body">
+            <h5 class="card-title">All Players</h5>
+            <a href="all-players.html" class="btn btn-dark">All Players</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+       
+      
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <footer class="bg-dark text-white text-center py-3 mt-5"style="transform:translateY(109px);">
+    &copy; 2025 Body Hustle All rights reserved.
+  </footer>
+  </body>
+</html>

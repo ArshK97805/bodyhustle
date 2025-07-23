@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Organizer Details Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Spinner Style -->
+  <style>
+    #waiting {
+      font-size: 50px;
+      color: gray;
+      position: fixed;
+      left: 48%;
+      top: 40%;
+      display: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<script>
+  function showUser()
+  {
+   let activeUser=localStorage.getItem("activeUser");
+   document.getElementById("email").value=activeUser;
+  }
+   function doLogout(){
+    localStorage.removeItem("activeUser");
+    location.href="index.html";
+  }
+</script>
+<body class="bg-light"onload="showUser();">
+
+  <!-- Spinner -->
+  <div id="waiting">
+    <i class="fa fa-spinner fa-spin"></i>
+  </div>
+
+<nav class="navbar navbar-dark bg-dark mb-2">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center ps-1" href="#">
+      <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+      <span class="fw-bold">Body Hustle</span>
+    </a>
+    <a href="#" class="btn btn-dark ms-auto text-light border border-light" onclick="doLogout();">Log Out</a>
+  </div>
+</nav>
+
+
+  <!-- Form -->
+  <div class="container">
+    <div class="col-md-8 p-4 offset-md-2">
+      <div class="card shadow">
+        <div class="card-body">
+          <h4 class="text-center text-dark mb-4">Organiser Details Form</h4>
+
+          <form id="organizerForm" method="post" enctype="multipart/form-data" action="/submit-organizer">
+            <input type="hidden" id="hdn" name="hdn">
+
+            <!-- Email + Search -->
+            <div class="row mb-3">
+              <div class="col-md-10">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" disabled>
+                <span id="errEmail" class="text-danger"></span>
+              </div>
+              <div class="col-md-2 d-grid align-self-end">
+                <label class="form-label invisible">Search</label>
+                <button type="button" class="btn btn-dark" id="btnFetchWithAJAX" formaction="/get-one1">Search</button>
+              </div>
+            </div>
+
+            <!-- Rest Fields -->
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Organisation Name</label>
+                <input type="text" class="form-control" name="org_name" id="org_name">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Registration Number</label>
+                <input type="text" class="form-control" name="reg_no" id="reg_no">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" name="addr" id="addr">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">City</label>
+                <input type="text" class="form-control" name="city" id="city">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Deals in Sports</label>
+                <input type="text" class="form-control" name="sports" id="sports">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Website</label>
+                <input type="text" class="form-control" name="website" id="website">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Instagram Link</label>
+                <input type="text" class="form-control" name="insta" id="insta">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Head of Organisation</label>
+                <input type="text" class="form-control" name="head_name" id="head_name">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Contact Number</label>
+                <input type="text" class="form-control" name="contact" id="contact">
+              </div>
+
+              <!-- File Upload -->
+              <div class="row align-items-center mb-3">
+                <div class="col">
+                  <label class="form-label">Registration Certificate Pic</label>
+                  <input type="file" class="form-control" name="profilePic" id="profilePic" onchange="showPrev()">
+                </div>
+                <div class="col-auto">
+                  <img id="prev" class="img-fluid mt-2" width="100" height="100" style="display: none;" />
+                </div>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Other Information</label>
+                <textarea class="form-control" name="otherinfo" id="otherinfo" rows="3"
+                  placeholder="Enter any other important information"></textarea>
+              </div>
+
+
+              <!-- Buttons -->
+              <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-dark me-2">Send to Server</button>
+                <button formaction="/update-user" class="btn btn-dark">Modify</button>
+              </div>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-4">
+    &copy; 2025 Body Hustle All rights reserved.
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    function showPrev() {
+      const file = document.getElementById('profilePic').files[0];
+      const prev = document.getElementById('prev');
+      if (file) {
+        prev.src = URL.createObjectURL(file);
+        prev.style.display = "block";
+      }
+    }
+
+    $(document).ready(function () {
+      // Email Availability Check
+      $("#email").blur(function () {
+        $.ajax({
+          type: "get",
+          url: "/chk-email",
+          data: { txtEmail: $("#email").val() },
+          success: function (response) {
+            $("#errEmail").html(response);
+          },
+        });
+      });
+
+      // Search via AJAX
+      $(document).ready(function () {
+        $("#btnFetchWithAJAX").click(function () {
+
+          let obj = {
+            type: "get",
+            url: "/get-one",
+            data: {
+              txtEmail: $("#email").val()   // ✅ Correct ID from your form
+            },
+            success: function (res) {
+              if (res.length === 0) return;
+
+              const data = res[0];
+              $("#org_name").val(data.org_name);
+              $("#reg_no").val(data.reg_no);
+              $("#addr").val(data.addr);
+              $("#city").val(data.city);
+              $("#sports").val(data.sports);
+              $("#website").val(data.website);
+              $("#insta").val(data.insta);
+              $("#head_name").val(data.head_name);
+              $("#contact").val(data.contact);
+              $("#prev").prop("src", data.reg_pic).show();
+              $("#hdn").val(data.reg_pic);
+              $("#otherinfo").val(data.otherinfo);
+
+            },
+            error: function () {
+
+            }
+          };
+
+          $.ajax(obj);
+        });
+      });
+
+      // Spinner control
+      $(document).ajaxStart(function () {
+        $("#waiting").show();
+      });
+      $(document).ajaxStop(function () {
+        $("#waiting").hide();
+      });
+    });
+  </script>
+
+</body>
+
+</html>

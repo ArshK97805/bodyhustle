@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Help Us</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+  </head>
+  <script>
+     function doLogout(){
+    localStorage.removeItem("activeUser");
+    location.href="index.html";
+  }
+  </script>
+  <body class="bg-light">
+     <nav class="navbar navbar-dark bg-dark mb-2">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center ps-1" href="#">
+      <img src="pics/Milwaukee-Bucks-450x450.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+      <span class="fw-bold">Body Hustle</span>
+    </a>
+    <a href="#" class="btn btn-dark ms-auto text-light border border-light" onclick="doLogout();">Log Out</a>
+  </div>
+</nav>
+    <div class="container mt-5">
+      <div class="card shadow-sm border-black">
+        <div class="card-header bg-black text-white">
+          <h4 class="mb-0">Help Us Form</h4>
+        </div>
+        <div class="card-body">
+            <div class="text-center mb-4">
+    <img src="pics/770.jpg" alt="Help Us Image" class="img-fluid rounded" style="max-width: 250px; height:auto;">
+  </div>
+          <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label">Ask Me Anything</label>
+              <input type="text" class="form-control" name="txtttt" placeholder="Type here...">
+              <button type="submit" formaction="/abc" class="btn btn-dark mt-2">Submit Text</button>
+            </div>
+
+            <hr>
+
+            <div class="mb-3">
+              <label class="form-label">Upload Aadhaar Image</label>
+              <input type="file" class="form-control" name="imggg">
+              <button type="submit" formaction="/picreader" class="btn btn-dark mt-2">Upload Image</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <footer class="bg-dark text-white text-center py-3 mt-5"style="transform:translateY(80px);">
+    &copy; 2025 Body Hustle All rights reserved.
+  </footer>
+  </body>
+</html>
