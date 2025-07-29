@@ -1,3 +1,4 @@
+// ------------------ Required Modules ------------------
 var express = require("express");
 var fileuploader = require("express-fileupload");
 var cloudinary = require("cloudinary").v2;
@@ -8,21 +9,45 @@ const fetch = require("node-fetch");
 globalThis.fetch = fetch;
 
 
+
+// ------------------ Google Gemini AI Setup ------------------
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI("AIzaSyCze8dXVHoRVqYTDcli8DfyxBP3e-dJUDc"); // Replace with valid key
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
+
+
+
+
+
+
+/// ------------------ Middleware Setup ------------------
 var app = express();//app() returns an Object:app
 app.use(express.urlencoded({ extended: true }));
 app.use(fileuploader());//for receiving files from client and save on server files
 
 
+
+
+
+
+
+// Server Start - Listening on Port 2028
 app.listen(2028, function () {
   console.log("Server Started at Port no: 2028")
 })
 
+
+
+
+
+// ------------------ Static Folder ------------------
 app.use(express.static("public"));
 
+
+
+
+// ------------------ Root Route ------------------
 app.get("/", function (req, resp) {
   console.log(__dirname);
   console.log(__filename);
@@ -32,6 +57,8 @@ app.get("/", function (req, resp) {
 })
 
 
+
+// ------------ Signup (GET Method Example) ------------------
 app.get("/server-index", function (req, resp) {
   //resp.send(req.query);
   //console.log(req.query.txtEmail,req.query.txtPwd);
@@ -55,15 +82,36 @@ app.get("/server-index", function (req, resp) {
 
 })
 
+
+
+
+
+
+
+
+// ------------------ Cloudinary Config ------------------
 app.use(express.urlencoded(true)); //convert POST data to JSON object
+
 cloudinary.config({
   cloud_name: 'dzjxdf5oj',
   api_key: '628224982589672',
   api_secret: 'Nd7q3pRJKKfcnU4QnsbzhmMVuUs' // Click 'View API Keys' above to copy your API secret
 });
+
+
+
 //--------------------------------AIven started---------------------------
+// MySQL Aiven Cloud Database Connection Setup
+// ---------------- MySQL Database Connection ------------------
 let dbConfig = "mysql://avnadmin:AVNS_K1dPH4CXduBNRPAmhNa@mysql-2a903107-kumararsh228-9f48.c.aivencloud.com:27270/sports_project";
 
+
+
+
+
+
+
+// Route: User Login (Check user credentials and status)
 let mySqlVen = mysql2.createConnection(dbConfig);
 mySqlVen.connect(function (errKuch) {
   if (errKuch == null)
@@ -72,6 +120,15 @@ mySqlVen.connect(function (errKuch) {
     console.log(errKuch.message)
 })
 
+
+
+
+
+
+
+
+
+// ------------- Route: Signup (Insert User) ------------------
 app.get("/signup-user", async function (req, resp) {
 
   let emailid = req.query.txtEmail;
@@ -90,6 +147,16 @@ app.get("/signup-user", async function (req, resp) {
 });
 });
 
+
+
+
+
+
+
+
+
+
+// ------------------ Route: Login ------------------
 app.get("/do-login", function (req, resp) {
   let email = req.query.emailid;
   let password = req.query.password;
@@ -110,6 +177,15 @@ app.get("/do-login", function (req, resp) {
         resp.send("Blocked");
     }
   });
+
+
+
+
+
+
+
+
+  // ------------------ Route: Email Check ------------------
   app.get("/chk-email", function (req, resp) {
     mySqlVen.query("SELECT * FROM users WHERE emailid=?", [req.query.txtEmail], function (err, allRecords) {
       if (err) {
@@ -125,6 +201,16 @@ app.get("/do-login", function (req, resp) {
   }); 
 });
 
+
+
+
+
+
+
+
+
+
+// ------ Route: Submit Organizer Details + Upload Pic ----------
 app.post("/submit-organizer", async function (req, resp) {
   let picurl = "nopic.jpg";
 
@@ -177,6 +263,12 @@ app.post("/submit-organizer", async function (req, resp) {
   });
 });
 
+
+
+
+
+
+// -------------- Route: Update Organizer Details ----------
 app.post("/update-user", async function (req, resp) {
   let picurl = "";
   
@@ -230,6 +322,14 @@ app.post("/update-user", async function (req, resp) {
   }
 });
 });
+
+
+
+
+
+
+
+//------------------ Route: Fetch One Organizer by Email ------
 app.get("/get-one", function (req, resp) {
   let email = req.query.txtEmail;
 
@@ -247,6 +347,14 @@ app.get("/get-one", function (req, resp) {
     }
   });
 });
+
+
+
+
+
+
+
+// ------------------ Route: Publish Event ------------------
 app.post("/publish-event", function (req, resp) {
   let {emailid,event,doe,toe,address,city,sports,minage,maxage,lastdate,fee,prize,contact}=req.body;
 
@@ -262,8 +370,12 @@ app.post("/publish-event", function (req, resp) {
   });
 });
 
-//do fetch all users
-// Fetch all events
+
+
+
+
+
+// ---------- Route: Get All Events by Organizer ----------------
 app.get("/fetch-events-by-email", function (req, res) {
   const email = req.query.email;
   mySqlVen.query("SELECT * FROM events WHERE emailid = ?", [email], function (err, result) {
@@ -272,6 +384,12 @@ app.get("/fetch-events-by-email", function (req, res) {
   });
 });
 
+
+
+
+
+
+// ------------------ Route: Delete Event ------------------
 app.get("/delete-event", function (req, res) {
   const rid = req.query.rid;
   mySqlVen.query("DELETE FROM events WHERE rid = ?", [rid], function (err, result) {
@@ -279,6 +397,15 @@ app.get("/delete-event", function (req, res) {
     else res.send("Tournament deleted");
   });
 });
+
+
+
+
+
+
+
+
+//---fetch tournament by rid---
 app.get("/get-tournament-by-rid", function (req, res) {
   const rid = req.query.rid;
   con.query("SELECT * FROM events WHERE rid=?", [rid], function (err, result) {
@@ -286,8 +413,17 @@ app.get("/get-tournament-by-rid", function (req, res) {
     else res.send(result);
   });
 });
-// POST - Upload Player Data
-// POST - Upload Player Data
+
+
+
+
+
+
+
+
+
+
+// ---------- Route: Submit Player Details with Pics------------
 app.post("/upload-player", async function (req, resp) {
   let profilePicUrl = "nopic.jpg";
   let aadhaarPicUrl = "nopic.jpg";
@@ -317,6 +453,12 @@ app.post("/upload-player", async function (req, resp) {
   });
 });
 
+
+
+
+
+
+
 // POST - Modify Player Data
 app.post("/update-player", async function (req, resp) {
   let profilePicUrl = req.body.profilePicOld || "nopic.jpg";
@@ -337,6 +479,17 @@ app.post("/update-player", async function (req, resp) {
     }
   }
 
+
+
+
+
+
+
+
+
+
+
+  
   const { email, name, dob, gender, contact, address, games, otherinfo } = req.body;
   const query = `UPDATE players SET name=?, dob=?, gender=?, contact=?, address=?, games=?, otherinfo=?, profilepic=?, aadhaarpic=? WHERE email=?`;
 
@@ -347,7 +500,15 @@ app.post("/update-player", async function (req, resp) {
   });
 });
 
-// GET - Get Player Data
+
+
+
+
+
+
+
+
+/// ------------------ Route: Get Player by Email ----------
 app.get("/get-player", function (req, resp) {
   const email = req.query.email;
   const query = "SELECT * FROM players WHERE email = ?";
@@ -359,6 +520,17 @@ app.get("/get-player", function (req, resp) {
   });
 });
 
+
+
+
+
+
+
+
+
+
+// ------------------ Route: Fetch All Users ---------------
+
 app.get("/fetch-all-users", function (req, res) {
   let query = "SELECT * FROM users";
   mySqlVen.query(query, function (err, result) {
@@ -366,6 +538,18 @@ app.get("/fetch-all-users", function (req, res) {
     else res.send(result);
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+// ------------------ Route: Update User Status ---------------
 app.get("/update-user-status", function (req, res) {
   const { email, status } = req.query;
   const query = "UPDATE users SET status=? WHERE emailid=?";
@@ -375,11 +559,28 @@ app.get("/update-user-status", function (req, res) {
   });
 });
 
+
+
+
+
+
+
+// ------------------ Route: Help Page -----------------
 app.get("/ai", function (req, resp) {
   let fullpath = __dirname + "/public/help-us.html";
   resp.sendFile(fullpath);
 });
 
+
+
+
+
+
+
+
+
+
+// ------------------ Route: Ask Gemini AI ------------------
 app.post("/abc", async function (req, resp) {
   console.log(req.body);
   let txt = req.body.txtttt;
@@ -410,6 +611,13 @@ async function RajeshBansalKaChirag(imgurl) {
   return jsonData;
 }
 
+
+
+
+
+
+
+// ------------------ Route: Aadhaar OCR ----------
 app.post("/picreader", async function (req, resp) {
   let fileName;
   if (req.files != null) {
@@ -430,6 +638,8 @@ app.post("/picreader", async function (req, resp) {
 });
 
 
+
+// ------------------ Route: Get All Organizers ------
 app.get("/fetchAllOrganizer", function (req, res) {
   let query = "SELECT * FROM organizer_details";
   mySqlVen.query(query, function (err, result) {
@@ -438,6 +648,13 @@ app.get("/fetchAllOrganizer", function (req, res) {
   });
 });
 
+
+
+
+
+
+
+// ------------------ Route: Get All Players -------------
 app.get("/fetchAllPlayers", function (req, resp) {
   let query = "SELECT * FROM players";
   mySqlVen.query(query, function (err, result) {
@@ -449,6 +666,12 @@ app.get("/fetchAllPlayers", function (req, resp) {
     }
   });
 });
+
+
+
+
+
+
 
 // Route to fetch filtered tournaments
 app.get("/do-fetch-all-tournaments", function (req, resp) {
@@ -467,7 +690,11 @@ app.get("/do-fetch-all-tournaments", function (req, resp) {
   });
 });
 
-// Route to fetch all unique cities for dropdown
+
+
+
+
+// --------------- Route: Get All Cities from Events -------
 app.get("/do-fetch-all-cities", function (req, resp) {
   let query = "SELECT DISTINCT city FROM events";
   mySqlVen.query(query, function (err, allRecords) {
@@ -480,7 +707,11 @@ app.get("/do-fetch-all-cities", function (req, resp) {
   });
 });
 
-// CHANGE PASS IN SETTINGS
+
+
+
+
+// ------------------ Route: Change Password ---------------
 app.get("/do-change-password", function (req, resp) {
     let emailid = req.query.emailid;
     let oldpass = req.query.oldpass;
