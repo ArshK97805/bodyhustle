@@ -590,10 +590,57 @@ app.post("/abc", async function (req, resp) {
   resp.send(result.response.text());
 });
 
-async function RajeshBansalKaChirag(imgurl) {
-  const myprompt = "Read the text on picture and tell all the information in adhaar card and give output STRICTLY in JSON format {adhaar_number:'', name:'', gender:'', dob: ''}. Dont give output as string.";
+async function RajeshBansalKaChirag(imgurl, docType) {
+  let myprompt;
 
-  const imageResp = await fetch(imgurl).then((response) => response.arrayBuffer());
+  switch (docType) {
+    case "aadhaar":
+      myprompt = `
+Read the text from the image of Aadhaar card. Extract and return the data STRICTLY in JSON format as:
+{
+  "adhaar_number": "",
+  "name": "",
+  "gender": "",
+  "dob": ""
+}
+No extra text, no explanation. Don't return as string.
+      `;
+      break;
+
+    case "driving_license":
+      myprompt = `
+Read the text from the Driving License image and extract details in STRICT JSON format:
+{
+  "license_number": "",
+  "name": "",
+  "dob": "",
+  "validity": "",
+  "address": ""
+}
+No extra text, no explanation. Don't return as string.
+      `;
+      break;
+
+    case "college_id":
+      myprompt = `
+Read the text from a College Identity Card image. Extract and return the following in STRICT JSON format:
+{
+  "student_name": "",
+  "college_name": "",
+  "roll_number": "",
+  "course": "",
+  "valid_upto": ""
+}
+No extra info. No explanation. Only the JSON.
+      `;
+      break;
+
+    default:
+      myprompt = "Extract information from the ID card in JSON format.";
+      break;
+  }
+
+  const imageResp = await fetch(imgurl).then((res) => res.arrayBuffer());
 
   const result = await model.generateContent([
     {
@@ -605,8 +652,7 @@ async function RajeshBansalKaChirag(imgurl) {
     myprompt,
   ]);
 
-  console.log(result.response.text());
-  const cleaned = result.response.text().replace(/```json|```/g, '').trim();
+  const cleaned = result.response.text().replace(/```json|```/g, "").trim();
   const jsonData = JSON.parse(cleaned);
   return jsonData;
 }
@@ -617,23 +663,28 @@ async function RajeshBansalKaChirag(imgurl) {
 
 
 
+
 // ------------------ Route: Aadhaar OCR ----------
 app.post("/picreader", async function (req, resp) {
+  const docType = req.body.doctype || "aadhaar"; // 'aadhaar' default
   let fileName;
+
   if (req.files != null) {
     try {
       fileName = req.files.imggg.name;
-      let locationToSave = __dirname + "/public/uploads/" + fileName;
+      const locationToSave = __dirname + "/public/uploads/" + fileName;
       await req.files.imggg.mv(locationToSave);
 
       await cloudinary.uploader.upload(locationToSave).then(async function (picUrlResult) {
-        let jsonData = await RajeshBansalKaChirag(picUrlResult.url);
+        const jsonData = await RajeshBansalKaChirag(picUrlResult.url, docType);
         resp.send(jsonData);
       });
 
     } catch (err) {
-      resp.send(err.message);
+      resp.send({ error: err.message });
     }
+  } else {
+    resp.send({ error: "No file uploaded." });
   }
 });
 
