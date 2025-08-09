@@ -141,10 +141,10 @@ app.get("/signup-user", async function (req, resp) {
       resp.send("Signup successful");
     }
 
-   else{
-  resp.send("Error: " + errKuch.message);
-  }
-});
+    else {
+      resp.send("Error: " + errKuch.message);
+    }
+  });
 });
 
 
@@ -162,19 +162,16 @@ app.get("/do-login", function (req, resp) {
   let password = req.query.password;
 
   let query = "SELECT * FROM users WHERE emailid = ? AND password = ?";
-  
+
   mySqlVen.query(query, [email, password], function (err, allRecords) {
-    if (allRecords.length == 0) 
-    {
+    if (allRecords.length == 0) {
       resp.send("Invalid");
     }
-    else if (allRecords[0].status == 1) 
-    {
-        resp.send(allRecords[0].utype);
-    } 
-    else 
-    {
-        resp.send("Blocked");
+    else if (allRecords[0].status == 1) {
+      resp.send(allRecords[0].utype);
+    }
+    else {
+      resp.send("Blocked");
     }
   });
 
@@ -195,10 +192,10 @@ app.get("/do-login", function (req, resp) {
         if (allRecords.length === 0)
           resp.send("Not Exists");
         else
-        resp.send("Exists");
-    }
+          resp.send("Exists");
+      }
+    });
   });
-  }); 
 });
 
 
@@ -217,10 +214,10 @@ app.post("/submit-organizer", async function (req, resp) {
   if (req.files != null) {
     let fName = req.files.profilePic.name;
     let fullPath = __dirname + "/public/uploads/" + fName;
-    
+
     // Save to server temp folder
     await req.files.profilePic.mv(fullPath);
-    
+
     // Upload to Cloudinary
     await cloudinary.uploader.upload(fullPath).then(function (picResult) {
       picurl = picResult.secure_url;
@@ -229,7 +226,7 @@ app.post("/submit-organizer", async function (req, resp) {
       console.log("Cloudinary upload error:", err);
     });
   }
-  
+
   // Collect form data
   let email = req.body.email;
   let org_name = req.body.org_name;
@@ -242,25 +239,25 @@ app.post("/submit-organizer", async function (req, resp) {
   let head_name = req.body.head_name;
   let contact = req.body.contact;
   let otherinfo = req.body.otherinfo;
-  
+
   // MySQL Insert Query
   let insertQuery = `
   INSERT INTO organizer_details 
   (email, org_name, reg_no, addr, city, sports, website, insta, head_name, contact, reg_pic,otherinfo)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
   `;
-  
+
   // Execute the query
   mySqlVen.query(insertQuery, [
     email, org_name, reg_no, addr, city, sports,
-    website, insta, head_name, contact, picurl,otherinfo], function (err) {
-    if (err) {
-      console.log("MySQL Error:", err);
-      resp.send("Database Error: " + err.message);
-    } else {
-      resp.send("Organizer details saved successfully ✅");
-    }
-  });
+    website, insta, head_name, contact, picurl, otherinfo], function (err) {
+      if (err) {
+        console.log("MySQL Error:", err);
+        resp.send("Database Error: " + err.message);
+      } else {
+        resp.send("Organizer details saved successfully ✅");
+      }
+    });
 });
 
 
@@ -271,13 +268,13 @@ app.post("/submit-organizer", async function (req, resp) {
 // -------------- Route: Update Organizer Details ----------
 app.post("/update-user", async function (req, resp) {
   let picurl = "";
-  
+
   // If a new file is uploaded
   if (req.files != null) {
     let fName = req.files.profilePic.name;
     let fullPath = __dirname + "/public/uploads/" + fName;
     await req.files.profilePic.mv(fullPath);
-    
+
     await cloudinary.uploader.upload(fullPath).then(function (result) {
       picurl = result.secure_url;
     }).catch(function (err) {
@@ -289,7 +286,7 @@ app.post("/update-user", async function (req, resp) {
     // Use existing pic from hidden input
     picurl = req.body.hdn;
   }
-  
+
   // Fetch form data
   let email = req.body.email;
   let org_name = req.body.org_name;
@@ -303,14 +300,14 @@ app.post("/update-user", async function (req, resp) {
   let contact = req.body.contact;
   let otherinfo = req.body.otherinfo;
 
-  
+
   // MySQL update query
   let query = `UPDATE organizer_details SET org_name=?, reg_no=?, addr=?, city=?, sports=?, website=?, insta=?, head_name=?, contact=?, reg_pic=?,otherinfo=?
   WHERE email=?
   `;
-  
+
   // Execute query
-  mySqlVen.query(query,[org_name, reg_no, addr, city, sports, website,insta,head_name, contact, picurl,otherinfo, email], function (err, result) {
+  mySqlVen.query(query, [org_name, reg_no, addr, city, sports, website, insta, head_name, contact, picurl, otherinfo, email], function (err, result) {
     if (err) {
       console.log("MySQL Error:", err);
       resp.send("Update failed: " + err.message);
@@ -318,9 +315,9 @@ app.post("/update-user", async function (req, resp) {
       if (result.affectedRows == 1)
         resp.send("Record updated successfully ✅");
       else
-      resp.send("Invalid Email ID ❌");
-  }
-});
+        resp.send("Invalid Email ID ❌");
+    }
+  });
 });
 
 
@@ -356,11 +353,11 @@ app.get("/get-one", function (req, resp) {
 
 // ------------------ Route: Publish Event ------------------
 app.post("/publish-event", function (req, resp) {
-  let {emailid,event,doe,toe,address,city,sports,minage,maxage,lastdate,fee,prize,contact}=req.body;
+  let { emailid, event, doe, toe, address, city, sports, minage, maxage, lastdate, fee, prize, contact } = req.body;
 
   let insertQuery = `INSERT INTO events(emailid, event, doe, toe, address, city, sports, minage, maxage, lastdate, fee, prize, contact)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  mySqlVen.query(insertQuery, [emailid,event,doe || null,toe || null,address,city,sports,minage, maxage,lastdate || null,fee,prize,contact], function (err) {
+  mySqlVen.query(insertQuery, [emailid, event, doe || null, toe || null, address, city, sports, minage, maxage, lastdate || null, fee, prize, contact], function (err) {
     if (err) {
       console.log("MySQL Error:", err);
       resp.send("Database Error: " + err.message);
@@ -489,7 +486,7 @@ app.post("/update-player", async function (req, resp) {
 
 
 
-  
+
   const { email, name, dob, gender, contact, address, games, otherinfo } = req.body;
   const query = `UPDATE players SET name=?, dob=?, gender=?, contact=?, address=?, games=?, otherinfo=?, profilepic=?, aadhaarpic=? WHERE email=?`;
 
@@ -571,15 +568,6 @@ app.get("/ai", function (req, resp) {
   resp.sendFile(fullpath);
 });
 
-
-
-
-
-
-
-
-
-
 // ------------------ Route: Ask Gemini AI ------------------
 app.post("/abc", async function (req, resp) {
   console.log(req.body);
@@ -603,7 +591,7 @@ Read the text from the image of Aadhaar card. Extract and return the data STRICT
   "gender": "",
   "dob": ""
 }
-No extra text, no explanation. Don't return as string.
+No extra text, no explanation.
       `;
       break;
 
@@ -617,7 +605,7 @@ Read the text from the Driving License image and extract details in STRICT JSON 
   "validity": "",
   "address": ""
 }
-No extra text, no explanation. Don't return as string.
+No extra text, no explanation.
       `;
       break;
 
@@ -631,7 +619,7 @@ Read the text from a College Identity Card image. Extract and return the followi
   "course": "",
   "valid_upto": ""
 }
-No extra info. No explanation. Only the JSON.
+No extra info. No explanation.
       `;
       break;
 
@@ -646,27 +634,30 @@ No extra info. No explanation. Only the JSON.
     {
       inlineData: {
         data: Buffer.from(imageResp).toString("base64"),
-        mimeType: "image/jpeg",
+        mimeType: "image/jpeg", // Can be dynamic if needed
       },
     },
-    myprompt,
+    { text: myprompt },
   ]);
 
-  const cleaned = result.response.text().replace(/```json|```/g, "").trim();
-  const jsonData = JSON.parse(cleaned);
+  let rawText = result.response.text();
+  // Remove markdown code block formatting if present
+  rawText = rawText.replace(/```[a-z]*\n?/gi, "").replace(/```/g, "").trim();
+
+  let jsonData;
+  try {
+    jsonData = JSON.parse(rawText);
+  } catch (e) {
+    console.error("JSON parse error:", rawText);
+    return { error: "Invalid AI output", raw: rawText };
+  }
+
   return jsonData;
 }
 
-
-
-
-
-
-
-
 // ------------------ Route: Aadhaar OCR ----------
 app.post("/picreader", async function (req, resp) {
-  const docType = req.body.doctype || "aadhaar"; // 'aadhaar' default
+  const docType = req.body.doctype || "aadhaar"; // default
   let fileName;
 
   if (req.files != null) {
@@ -676,15 +667,19 @@ app.post("/picreader", async function (req, resp) {
       await req.files.imggg.mv(locationToSave);
 
       await cloudinary.uploader.upload(locationToSave).then(async function (picUrlResult) {
-        const jsonData = await RajeshBansalKaChirag(picUrlResult.url, docType);
-        resp.send(jsonData);
+        try {
+          const jsonData = await RajeshBansalKaChirag(picUrlResult.url, docType);
+          resp.json(jsonData); // Always send JSON
+        } catch (err) {
+          resp.json({ error: err.message });
+        }
       });
 
     } catch (err) {
-      resp.send({ error: err.message });
+      resp.json({ error: err.message });
     }
   } else {
-    resp.send({ error: "No file uploaded." });
+    resp.json({ error: "No file uploaded." });
   }
 });
 
@@ -764,18 +759,17 @@ app.get("/do-fetch-all-cities", function (req, resp) {
 
 // ------------------ Route: Change Password ---------------
 app.get("/do-change-password", function (req, resp) {
-    let emailid = req.query.emailid;
-    let oldpass = req.query.oldpass;
-    let newpass = req.query.newpass;
+  let emailid = req.query.emailid;
+  let oldpass = req.query.oldpass;
+  let newpass = req.query.newpass;
 
-    let updateQuery = "UPDATE users SET password=? WHERE emailid=? AND password=? AND utype='Players'";
+  let updateQuery = "UPDATE users SET password=? WHERE emailid=? AND password=? AND utype='Players'";
 
-    mySqlVen.query(updateQuery, [newpass, emailid, oldpass], function (errKuch, result) {
-        if (result.affectedRows == 0) {
-            resp.send("Wrong Email ID or Password");
-        } else {
-            resp.send("Password Updated Successfully!!");
-        }
-    });
+  mySqlVen.query(updateQuery, [newpass, emailid, oldpass], function (errKuch, result) {
+    if (result.affectedRows == 0) {
+      resp.send("Wrong Email ID or Password");
+    } else {
+      resp.send("Password Updated Successfully!!");
+    }
+  });
 });
- 
