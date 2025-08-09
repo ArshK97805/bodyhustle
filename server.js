@@ -736,6 +736,28 @@ app.get("/do-fetch-all-tournaments", function (req, resp) {
   });
 });
 
+app.get("/leaderboard", function(req, res) {
+  let query = `
+    SELECT p.email, p.name,
+           COALESCE(SUM(CASE WHEN mr.result = 'win' THEN 1 ELSE 0 END), 0) AS wins,
+           COALESCE(SUM(CASE WHEN mr.result = 'loss' THEN 1 ELSE 0 END), 0) AS losses
+    FROM players p
+    LEFT JOIN match_results mr ON p.email = mr.player_email
+    GROUP BY p.email, p.name
+    ORDER BY wins DESC, losses ASC
+    LIMIT 10
+  `;
+
+  mySqlVen.query(query, function(err, result) {
+    if (err) {
+      res.status(500).send("DB error: " + err.message);
+    } else {
+      res.json(result); // send JSON response
+    }
+  });
+});
+
+
 
 
 
