@@ -15,28 +15,37 @@
   }
 </script>
 <script>
-  function uploadDoc() {
-    const fileInput = document.getElementById("fileInput");
-    const docType = document.getElementById("docType").value;
+function uploadDoc() {
+  const fileInput = document.getElementById("fileInput");
+  const docType = document.getElementById("docType").value;
+  const resultBox = document.getElementById("resultBox");
 
-    const formData = new FormData();
-    formData.append("imggg", fileInput.files[0]);
-    formData.append("doctype", docType);
-
-    fetch("/picreader", {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Extracted data:", data);
-        // You can show the result in the UI here
-      })
-      .catch((err) => {
-        console.error("Error:", err);
-      });
+  if (!fileInput.files.length) {
+    alert("Please select a file first.");
+    return;
   }
+
+  const formData = new FormData();
+  formData.append("imggg", fileInput.files[0]);
+  formData.append("doctype", docType);
+
+  fetch("/picreader", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Extracted data:", data);
+      resultBox.style.display = "block";
+      resultBox.textContent = JSON.stringify(data, null, 2);
+    })
+    .catch((err) => {
+      console.error("Error:", err);
+      alert("Extraction failed. See console for details.");
+    });
+}
 </script>
+
 
 <body class="bg-light">
   <nav class="navbar navbar-dark bg-dark mb-2">
