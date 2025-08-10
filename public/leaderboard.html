@@ -13,20 +13,25 @@
       object-fit: cover;
       border-radius: 50%;
     }
-    .leaderboard-card {
-      max-width: 900px;
-      margin: auto;
-    }
+    .leaderboard-card { max-width: 900px; margin: auto; }
   </style>
 </head>
 <body>
   <div class="container my-4">
     <h2 class="text-center fw-bold mb-4">🏆 Leaderboard</h2>
 
-    <!-- Search Filter -->
+    <!-- Filters -->
     <div class="row mb-3">
-      <div class="col-md-6 mx-auto">
-        <input type="text" id="gameSearch" class="form-control" placeholder="Search by game (e.g., Badminton)">
+      <!-- Event Dropdown -->
+      <div class="col-md-4">
+        <select id="eventDropdown" class="form-select"></select>
+      </div>
+
+      <!-- Game Dropdown -->
+      <div class="col-md-4">
+        <select id="gameDropdown" class="form-select">
+          <option value="">All Games</option>
+        </select>
       </div>
     </div>
 
@@ -52,10 +57,49 @@
   </div>
 
   <script>
-    function loadLeaderboard(game = "") {
-      const eventId = 1; // You can make this dynamic too if needed
+    const allGames = [
+      "Cricket", "Football", "Hockey", "Volleyball", "Basketball", "Baseball", "Rugby", "Kho-Kho", "Kabaddi",
+      "Track & Field (Athletics)", "High Jump", "Long Jump", "Javelin Throw", "Shot Put", "Discus Throw", "Marathon",
+      "Archery", "Skating", "Horse Riding", "Cycling", "Golf", "Surfing", "Skateboarding", "Mountain Biking", "Badminton"
+    ];
+
+    function loadEvents() {
+      fetch("/events")
+        .then(res => res.json())
+        .then(events => {
+          const eventDropdown = document.getElementById("eventDropdown");
+          eventDropdown.innerHTML = "";
+          events.forEach(ev => {
+            const option = document.createElement("option");
+            option.value = ev.rid;
+            option.textContent = `${ev.event} (${ev.sports})`;
+            eventDropdown.appendChild(option);
+          });
+          if (events.length > 0) {
+            eventDropdown.value = events[0].rid;
+            loadGames();
+            loadLeaderboard();
+          }
+        })
+        .catch(err => console.error("Error loading events:", err));
+    }
+
+    function loadGames() {
+      const gameDropdown = document.getElementById("gameDropdown");
+      gameDropdown.innerHTML = `<option value="">All Games</option>`;
+      allGames.forEach(game => {
+        const option = document.createElement("option");
+        option.value = game;
+        option.textContent = game;
+        gameDropdown.appendChild(option);
+      });
+    }
+
+    function loadLeaderboard() {
+      const eventId = document.getElementById("eventDropdown").value;
+      const game = document.getElementById("gameDropdown").value;
       let url = `/leaderboard?eventId=${eventId}`;
-      if (game.trim() !== "") {
+      if (game) {
         url += `&game=${encodeURIComponent(game)}`;
       }
 
@@ -82,18 +126,15 @@
             tbody.innerHTML += row;
           });
         })
-        .catch(err => {
-          console.error("Error loading leaderboard:", err);
-        });
+        .catch(err => console.error("Error loading leaderboard:", err));
     }
 
-    // Initial Load
-    loadLeaderboard();
+    // Event listeners
+    document.getElementById("eventDropdown").addEventListener("change", loadLeaderboard);
+    document.getElementById("gameDropdown").addEventListener("change", loadLeaderboard);
 
-    // Search Input Event
-    document.getElementById("gameSearch").addEventListener("input", function() {
-      loadLeaderboard(this.value);
-    });
+    // Initial load
+    loadEvents();
   </script>
 </body>
 </html>
