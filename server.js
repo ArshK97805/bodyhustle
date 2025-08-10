@@ -736,9 +736,23 @@ app.get("/do-fetch-all-tournaments", function (req, resp) {
   });
 });
 
+
+// Fetch events list
+app.get("/events", function (req, res) {
+  const query = `SELECT rid, event, sports FROM events ORDER BY doe DESC`;
+  mySqlVen.query(query, function (err, result) {
+    if (err) {
+      res.status(500).send("DB error: " + err.message);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+// Leaderboard route
 app.get("/leaderboard", function (req, res) {
-  const gameFilter = req.query.game || ""; // Get game name from query parameter
-  const eventId = req.query.eventId || 1;  // Default eventId = 1 if not passed
+  const eventId = req.query.eventId;
+  const game = req.query.game;
 
   let query = `
     SELECT 
@@ -755,16 +769,25 @@ app.get("/leaderboard", function (req, res) {
         ON p.email = m.player_email
     INNER JOIN events e
         ON e.rid = m.tournament_id
-    WHERE e.rid = ? 
-      ${gameFilter ? "AND p.games LIKE ?" : ""}
+    WHERE 1=1
+  `;
+
+  let params = [];
+
+  if (eventId) {
+    query += ` AND e.rid = ?`;
+    params.push(eventId);
+  }
+
+  if (game) {
+    query += ` AND p.games = ?`;
+    params.push(game);
+  }
+
+  query += `
     GROUP BY p.email, p.name, p.games, p.profilepic
     ORDER BY wins DESC, losses ASC
   `;
-
-  let params = [eventId];
-  if (gameFilter) {
-    params.push(`%${gameFilter}%`);
-  }
 
   mySqlVen.query(query, params, function (err, result) {
     if (err) {
@@ -774,6 +797,7 @@ app.get("/leaderboard", function (req, res) {
     }
   });
 });
+
 
 
 
