@@ -750,11 +750,31 @@ app.get("/events", function (req, res) {
 });
 
 // Leaderboard route
+// Get all events for dropdown
+app.get("/events", function (req, res) {
+  const sql = `
+    SELECT rid, event, sports 
+    FROM events
+    ORDER BY doe DESC
+  `;
+  mySqlVen.query(sql, function (err, result) {
+    if (err) {
+      res.status(500).send("DB error: " + err.message);
+    } else {
+      res.json(result);
+    }
+  });
+});
+
+// Get leaderboard for a specific event
 app.get("/leaderboard", function (req, res) {
   const eventId = req.query.eventId;
-  const game = req.query.game;
 
-  let query = `
+  if (!eventId) {
+    return res.status(400).send("Missing eventId");
+  }
+
+  const query = `
     SELECT 
         p.email,
         p.name,
@@ -769,27 +789,12 @@ app.get("/leaderboard", function (req, res) {
         ON p.email = m.player_email
     INNER JOIN events e
         ON e.rid = m.tournament_id
-    WHERE 1=1
-  `;
-
-  let params = [];
-
-  if (eventId) {
-    query += ` AND e.rid = ?`;
-    params.push(eventId);
-  }
-
-  if (game) {
-    query += ` AND p.games = ?`;
-    params.push(game);
-  }
-
-  query += `
+    WHERE e.rid = ?
     GROUP BY p.email, p.name, p.games, p.profilepic
     ORDER BY wins DESC, losses ASC
   `;
 
-  mySqlVen.query(query, params, function (err, result) {
+  mySqlVen.query(query, [eventId], function (err, result) {
     if (err) {
       res.status(500).send("DB error: " + err.message);
     } else {
@@ -797,7 +802,6 @@ app.get("/leaderboard", function (req, res) {
     }
   });
 });
-
 
 
 
