@@ -738,15 +738,19 @@ app.get("/do-fetch-all-tournaments", function (req, resp) {
 
 app.get("/leaderboard", function(req, res) {
   let query = `
-    SELECT p.email, p.name, p.games, p.profilepic,
-           SUM(CASE WHEN m.result = 'win' THEN 1 ELSE 0 END) AS wins,
-           SUM(CASE WHEN m.result = 'loss' THEN 1 ELSE 0 END) AS losses,
-           SUM(CASE WHEN m.result = 'draw' THEN 1 ELSE 0 END) AS draws,
-           COUNT(*) AS total_games
+    SELECT 
+        p.email,
+        p.name,
+        p.games,
+        p.profilepic,
+        COALESCE(SUM(CASE WHEN m.result = 'win' THEN 1 ELSE 0 END), 0) AS wins,
+        COALESCE(SUM(CASE WHEN m.result = 'loss' THEN 1 ELSE 0 END), 0) AS losses,
+        COALESCE(SUM(CASE WHEN m.result = 'draw' THEN 1 ELSE 0 END), 0) AS draws,
+        COUNT(m.id) AS total_games
     FROM players p
     LEFT JOIN match_results m 
         ON p.email = m.player_email
-    JOIN events e
+    INNER JOIN events e
         ON e.rid = m.tournament_id
     WHERE e.rid = 1
     GROUP BY p.email, p.name, p.games, p.profilepic
@@ -754,8 +758,11 @@ app.get("/leaderboard", function(req, res) {
   `;
 
   mySqlVen.query(query, function(err, result) {
-    if (err) res.status(500).send("DB error: " + err.message);
-    else res.send(result);
+    if (err) {
+      res.status(500).send("DB error: " + err.message);
+    } else {
+      res.json(result);
+    }
   });
 });
 
