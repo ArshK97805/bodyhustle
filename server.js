@@ -736,7 +736,10 @@ app.get("/do-fetch-all-tournaments", function (req, resp) {
   });
 });
 
-app.get("/leaderboard", function(req, res) {
+app.get("/leaderboard", function (req, res) {
+  const gameFilter = req.query.game || ""; // Get game name from query parameter
+  const eventId = req.query.eventId || 1;  // Default eventId = 1 if not passed
+
   let query = `
     SELECT 
         p.email,
@@ -752,12 +755,18 @@ app.get("/leaderboard", function(req, res) {
         ON p.email = m.player_email
     INNER JOIN events e
         ON e.rid = m.tournament_id
-    WHERE e.rid = 1
+    WHERE e.rid = ? 
+      ${gameFilter ? "AND p.games LIKE ?" : ""}
     GROUP BY p.email, p.name, p.games, p.profilepic
     ORDER BY wins DESC, losses ASC
   `;
 
-  mySqlVen.query(query, function(err, result) {
+  let params = [eventId];
+  if (gameFilter) {
+    params.push(`%${gameFilter}%`);
+  }
+
+  mySqlVen.query(query, params, function (err, result) {
     if (err) {
       res.status(500).send("DB error: " + err.message);
     } else {
@@ -765,6 +774,7 @@ app.get("/leaderboard", function(req, res) {
     }
   });
 });
+
 
 
 
