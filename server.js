@@ -843,53 +843,83 @@ app.get("/do-change-password", function (req, resp) {
     }
   });
 });
+// ====================== AUTH & ROLE ======================
+// Simple middleware for role check
+function requireRole(role) {
+  return (req, res, next) => {
+    if (req.headers.role === role) next();
+    else res.status(403).json({ error: "Unauthorized: " + role + " only" });
+  };
+}
 
-app.get("/leaderboard/:tournament_id", (req, res) => {
-  const tid = req.params.tournament_id;
 
-  const query = `
-    SELECT p.email, p.name, p.profilepic, e.sports,
-      SUM(CASE WHEN r.result='win' THEN 1 ELSE 0 END) AS wins,
-      SUM(CASE WHEN r.result='loss' THEN 1 ELSE 0 END) AS losses,
-      SUM(CASE WHEN r.result='draw' THEN 1 ELSE 0 END) AS draws,
-      COUNT(r.id) AS total
-    FROM match_results r
-    JOIN players p ON p.email = r.player_email
-    JOIN events e ON e.rid = r.tournament_id
-    WHERE r.tournament_id = ?
-    GROUP BY p.email, p.name, p.profilepic, e.sports
-    ORDER BY wins DESC, draws DESC, losses ASC;
-  `;
-
-  db.query(query, [tid], (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json(results);
+app.post("/create-event", requireRole("organizer"), (req, res) => {
+  const data = req.body;
+  const sql = `INSERT INTO events (emailid, event, doe, toe, address, city, sports, minage, maxage, lastdate, fee, prize, contact) 
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+  db.query(sql, [
+    data.emailid, data.event, data.doe, data.toe, data.address, data.city, 
+    data.sports, data.minage, data.maxage, data.lastdate, data.fee, data.prize, data.contact
+  ], (err, result) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json({ message: "Event created", id: result.insertId });
   });
 });
 
-// ✅ API: Reset leaderboard (delete results for a tournament)
-app.delete("/leaderboard/:tournament_id/reset", (req, res) => {
-  const tid = req.params.tournament_id;
-  db.query("DELETE FROM match_results WHERE tournament_id = ?", [tid], (err) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ success: true });
+// Postpone event (Organizer)
+app.put("/postpone-event/:id", requireRole("organizer"), (req, res) => {
+  const { id } = req.params;
+  const { newDate, newTime } = req.body;
+  const sql = "UPDATE events SET doe=?, toe=? WHERE rid=?";
+  db.query(sql, [newDate, newTime, id], (err, result) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json({ message: "Event postponed" });
   });
 });
 
-// ✅ API: Remove one player’s result
-app.delete("/leaderboard/result/:id", (req, res) => {
-  const id = req.params.id;
-  db.query("DELETE FROM match_results WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ success: true });
+// Delete event (Organizer)
+app.delete("/delete-event/:id", requireRole("organizer"), (req, res) => {
+  db.query("DELETE FROM events WHERE rid=?", [req.params.id], (err, result) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json({ message: "Event deleted" });
   });
 });
 
-// ✅ API: Edit result
-app.put("/leaderboard/result/:id", (req, res) => {
-  const { result } = req.body;
-  db.query("UPDATE match_results SET result = ? WHERE id = ?", [result, req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json({ success: true });
+// ====================== LEADERBOARD ======================
+// Example leaderboard table (rid, player_email, score)
+app.get("/leaderboard/:eventId", (req, res) => {
+  const sql = `SELECT p.name, l.score 
+               FROM leaderboard l 
+               JOIN players p ON l.player_email = p.email 
+               WHERE l.rid=? 
+               ORDER BY l.score DESC`;
+  db.query(sql, [req.params.eventId], (err, rows) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json(rows);
   });
+});
+
+// Update score (Organizer)
+app.post("/update-score", requireRole("organizer"), (req, res) => {
+  const { rid, player_email, score } = req.body;
+  const sql = `INSERT INTO leaderboard (rid, player_email, score)
+               VALUES (?,?,?)
+               ON DUPLICATE KEY UPDATE score=?`;
+  db.query(sql, [rid, player_email, score, score], (err, result) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json({ message: "Score updated" });
+  });
+});
+
+// Reset leaderboard (Admin only)
+app.delete("/reset-leaderboard/:eventId", requireRole("admin"), (req, res) => {
+  db.query("DELETE FROM leaderboard WHERE rid=?", [req.params.eventId], (err, result) => {
+    if (err) res.status(500).json({ error: err });
+    else res.json({ message: "Leaderboard reset" });
+  });
+});
+
+// Finalize leaderboard (Admin)
+app.post("/finalize-leaderboard/:eventId", requireRole("admin"), (req, res) => {
+  res.json({ message: `Leaderboard for event ${req.params.eventId} finalized` });
 });
