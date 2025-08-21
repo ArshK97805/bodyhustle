@@ -848,30 +848,41 @@ app.get("/do-change-password", function (req, resp) {
 // ===================== PLAYER ROUTES =====================
 
 // Update Player Details
+// Update Player Stats
 app.post("/update-player", (req, res) => {
-  const { email, name, dob, gender, contact, address, games, otherinfo, profilepic, aadhaarpic } = req.body;
+  const { email, wins, losses, draws } = req.body;
 
-  const sql = `
+  const total = (parseInt(wins) || 0) + (parseInt(losses) || 0) + (parseInt(draws) || 0);
+
+  const query = `
     UPDATE players 
-    SET name=?, dob=?, gender=?, contact=?, address=?, games=?, otherinfo=?, profilepic=?, aadhaarpic=?
-    WHERE email=?`;
+    SET wins = ?, losses = ?, draws = ?, total_games = ? 
+    WHERE email = ?
+  `;
 
-  db.query(
-    sql,
-    [name, dob, gender, contact, address, games, otherinfo, profilepic, aadhaarpic, email],
-    (err) => {
-      if (err) return res.json({ message: "Error updating player", error: err });
-      res.json({ message: "Player updated successfully" });
+  db.query(query, [wins, losses, draws, total, email], (err, result) => {
+    if (err) {
+      return res.json({ message: "Error updating player", error: err });
     }
-  );
+    if (result.affectedRows === 0) {
+      return res.json({ message: "No player found with this email" });
+    }
+    res.json({ message: "Player updated successfully" });
+  });
 });
+
 
 // Delete Player
 app.delete("/delete-player/:email", (req, res) => {
   const { email } = req.params;
 
-  db.query("DELETE FROM players WHERE email=?", [email], (err) => {
-    if (err) return res.json({ message: "Error deleting player", error: err });
+  db.query("DELETE FROM players WHERE email = ?", [email], (err, result) => {
+    if (err) {
+      return res.json({ message: "Error deleting player", error: err });
+    }
+    if (result.affectedRows === 0) {
+      return res.json({ message: "No player found with this email" });
+    }
     res.json({ message: "Player deleted successfully" });
   });
 });
