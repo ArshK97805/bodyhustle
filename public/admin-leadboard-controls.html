@@ -2,99 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Leaderboard Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leaderboard - Admin Control</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f8f9fa; }
-    .profile-pic { width:40px; height:40px; border-radius:50%; margin-right:8px; }
+    body { background-color: #f8f9fa; }
+    .profile-pic {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .leaderboard-card {
+      max-width: 1000px;
+      margin: auto;
+    }
   </style>
 </head>
-<body class="p-4">
-  <h3 class="text-center text-primary fw-bold">⚙️ Admin Leaderboard Control</h3>
+<body>
+  <div class="container my-4">
+    <h2 class="text-center fw-bold mb-4">🏆 Leaderboard (Admin Controls)</h2>
 
-  <div class="d-flex justify-content-center mt-3">
-    <select id="tournamentSelect" class="form-select w-50">
-      <option value="">Select Tournament</option>
-    </select>
-    <button class="btn btn-warning ms-2" onclick="postpone()">Postpone</button>
-    <button class="btn btn-danger ms-2" onclick="resetLeaderboard()">Reset Leaderboard</button>
+    <!-- Event Dropdown -->
+    <div class="row mb-3">
+      <div class="col-md-4 mx-auto">
+        <select id="eventDropdown" class="form-select">
+          <option value="">Select Event</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div id="leaderboard" class="leaderboard-card card shadow-sm">
+      <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Game</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Draws</th>
+              <th>Total</th>
+              <th>Actions</th> <!-- Admin Controls -->
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <table class="table table-hover mt-4">
-    <thead class="table-dark">
-      <tr>
-        <th>Player</th><th>Game</th><th>Wins</th><th>Losses</th><th>Draws</th><th>Total</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboardBody"></tbody>
-  </table>
-
   <script>
-    async function loadTournaments() {
-      let res = await fetch("/events"); // Create an API that fetches events
-      let data = await res.json();
-      let select = document.getElementById("tournamentSelect");
-      data.forEach(ev => {
-        let opt = document.createElement("option");
-        opt.value = ev.rid;
-        opt.textContent = ev.event + " (" + ev.sports + ")";
-        select.appendChild(opt);
+    // Load Events into Dropdown
+    fetch("/events")
+      .then(res => res.json())
+      .then(events => {
+        const eventDropdown = document.getElementById("eventDropdown");
+        events.forEach(ev => {
+          const opt = document.createElement("option");
+          opt.value = ev.rid;
+          opt.textContent = `${ev.event} (${ev.sports})`;
+          eventDropdown.appendChild(opt);
+        });
       });
+
+    // Load Leaderboard for Selected Event
+    function loadLeaderboard(eventId) {
+      if (!eventId) {
+        document.getElementById("leaderboardBody").innerHTML = "";
+        return;
+      }
+
+      fetch(`/leaderboard?eventId=${eventId}`)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById("leaderboardBody");
+          tbody.innerHTML = "";
+          data.forEach((player, index) => {
+            const row = `
+              <tr>
+                <td>${index + 1}</td>
+                <td>
+                  <img src="${player.profilepic || 'default-pic.png'}" class="profile-pic me-2">
+                  ${player.name}
+                </td>
+                <td>${player.games || '-'}</td>
+                <td>${player.wins || 0}</td>
+                <td>${player.losses || 0}</td>
+                <td>${player.draws || 0}</td>
+                <td>${player.total_games || 0}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning" onclick="editPlayer('${player.id}')">Edit</button>
+                  <button class="btn btn-sm btn-danger" onclick="deletePlayer('${player.id}')">Delete</button>
+                </td>
+              </tr>
+            `;
+            tbody.innerHTML += row;
+          });
+        });
     }
 
-    async function loadLeaderboard() {
-      let tid = document.getElementById("tournamentSelect").value;
-      if (!tid) return;
-      let res = await fetch(`/leaderboard/${tid}`);
-      let data = await res.json();
-      let tbody = document.getElementById("leaderboardBody");
-      tbody.innerHTML = "";
-      data.forEach(row => {
-        tbody.innerHTML += `
-          <tr>
-            <td><img src="${row.profilepic}" class="profile-pic"> ${row.name}</td>
-            <td>${row.sports}</td>
-            <td>${row.wins}</td>
-            <td>${row.losses}</td>
-            <td>${row.draws}</td>
-            <td>${row.total}</td>
-            <td>
-              <button class="btn btn-sm btn-primary" onclick="editResult(${row.email})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="removeResult(${row.email})">Remove</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
+    // Event Dropdown Change
+    document.getElementById("eventDropdown").addEventListener("change", function() {
+      loadLeaderboard(this.value);
+    });
 
-    function resetLeaderboard() {
-      let tid = document.getElementById("tournamentSelect").value;
-      if (!tid) return alert("Select a tournament");
-      fetch(`/leaderboard/${tid}/reset`, { method: "DELETE" })
-        .then(() => loadLeaderboard());
-    }
+    // Admin Edit Function
+    function editPlayer(playerId) {
+      const newWins = prompt("Enter updated Wins:");
+      const newLosses = prompt("Enter updated Losses:");
+      const newDraws = prompt("Enter updated Draws:");
 
-    function postpone() {
-      alert("Tournament postponed (this would update events table)");
-    }
-
-    function editResult(id) {
-      let result = prompt("Enter new result (win/loss/draw):");
-      if (!result) return;
-      fetch(`/leaderboard/result/${id}`, {
-        method: "PUT",
+      fetch(`/update-player`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result })
-      }).then(() => loadLeaderboard());
+        body: JSON.stringify({ id: playerId, wins: newWins, losses: newLosses, draws: newDraws })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        alert(resp.message);
+        loadLeaderboard(document.getElementById("eventDropdown").value);
+      });
     }
 
-    function removeResult(id) {
-      fetch(`/leaderboard/result/${id}`, { method: "DELETE" })
-        .then(() => loadLeaderboard());
-    }
+    // Admin Delete Function
+    function deletePlayer(playerId) {
+      if (!confirm("Are you sure you want to delete this player from leaderboard?")) return;
 
-    document.getElementById("tournamentSelect").addEventListener("change", loadLeaderboard);
-    loadTournaments();
+      fetch(`/delete-player/${playerId}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(resp => {
+          alert(resp.message);
+          loadLeaderboard(document.getElementById("eventDropdown").value);
+        });
+    }
   </script>
 </body>
 </html>
