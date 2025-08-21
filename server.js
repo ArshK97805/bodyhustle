@@ -993,3 +993,58 @@ app.get("/matches", (req, res) => {
     res.json(results);
   });
 });
+// Postpone Match
+app.post("/postpone-match", (req, res) => {
+  const { match_id, reason, new_date, new_time } = req.body;
+
+  if (!match_id || !reason || !new_date || !new_time) {
+    return res.json({ message: "Please provide match_id, reason, new_date and new_time" });
+  }
+
+  const query = `
+    UPDATE tournament_matches 
+    SET status = 'postponed', postpone_reason = ?, new_date = ?, new_time = ?
+    WHERE match_id = ?
+  `;
+
+  db.query(query, [reason, new_date, new_time, match_id], (err, result) => {
+    if (err) return res.json({ message: "Error postponing match", error: err });
+    res.json({ message: "Match postponed successfully", affectedRows: result.affectedRows });
+  });
+});
+
+
+// Cancel Match
+app.post("/cancel-match", (req, res) => {
+  const { match_id, reason } = req.body;
+
+  if (!match_id || !reason) {
+    return res.json({ message: "Please provide match_id and reason" });
+  }
+
+  const query = `
+    UPDATE tournament_matches 
+    SET status = 'cancelled', postpone_reason = ?
+    WHERE match_id = ?
+  `;
+
+  db.query(query, [reason, match_id], (err, result) => {
+    if (err) return res.json({ message: "Error cancelling match", error: err });
+    res.json({ message: "Match cancelled successfully", affectedRows: result.affectedRows });
+  });
+});
+
+
+// Get All Matches (with postponed/cancelled info also)
+app.get("/matches", (req, res) => {
+  const query = `
+    SELECT match_id, event_id, player1_email, player2_email,
+           status, winner_email, scheduled_date, scheduled_time,
+           postpone_reason, new_date, new_time
+    FROM tournament_matches
+  `;
+  db.query(query, (err, results) => {
+    if (err) return res.json({ message: "Error fetching matches", error: err });
+    res.json(results);
+  });
+});
