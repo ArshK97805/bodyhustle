@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Leaderboard Control</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f6f9; }
+    .profile-pic {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .leaderboard-card {
+      max-width: 1100px;
+      margin: auto;
+    }
+    .action-btns button {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-4">
+    <h2 class="text-center fw-bold mb-4 text-primary">⚙️ Admin Leaderboard Control</h2>
+
+    <!-- Event Dropdown + Admin Controls -->
+    <div class="row mb-4">
+      <div class="col-md-6 mx-auto d-flex">
+        <select id="eventDropdown" class="form-select me-2">
+          <option value="">Select Event</option>
+        </select>
+        <button id="btnPostpone" class="btn btn-warning me-2" disabled>Postpone</button>
+        <button id="btnReset" class="btn btn-danger" disabled>Reset Leaderboard</button>
+      </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div id="leaderboard" class="leaderboard-card card shadow-sm">
+      <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Game</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Draws</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load Events into Dropdown
+    fetch("/events")
+      .then(res => res.json())
+      .then(events => {
+        const eventDropdown = document.getElementById("eventDropdown");
+        events.forEach(ev => {
+          const opt = document.createElement("option");
+          opt.value = ev.rid;
+          opt.textContent = `${ev.event} (${ev.sports})`;
+          eventDropdown.appendChild(opt);
+        });
+      });
+
+    // Load Leaderboard for Selected Event
+    function loadLeaderboard(eventId) {
+      if (!eventId) {
+        document.getElementById("leaderboardBody").innerHTML = "";
+        document.getElementById("btnPostpone").disabled = true;
+        document.getElementById("btnReset").disabled = true;
+        return;
+      }
+
+      fetch(`/leaderboard?eventId=${eventId}`)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById("leaderboardBody");
+          tbody.innerHTML = "";
+          data.forEach((player, index) => {
+            const row = `
+              <tr>
+                <td>${index + 1}</td>
+                <td>
+                  <img src="${player.profilepic || 'default-pic.png'}" class="profile-pic me-2">
+                  ${player.name}
+                </td>
+                <td>${player.games || '-'}</td>
+                <td>${player.wins || 0}</td>
+                <td>${player.losses || 0}</td>
+                <td>${player.draws || 0}</td>
+                <td>${player.total_games || 0}</td>
+                <td class="action-btns">
+                  <button class="btn btn-sm btn-primary" onclick="editScore('${player.id}')">Edit</button>
+                  <button class="btn btn-sm btn-danger" onclick="removePlayer('${player.id}')">Remove</button>
+                </td>
+              </tr>
+            `;
+            tbody.innerHTML += row;
+          });
+
+          // Enable Admin Buttons
+          document.getElementById("btnPostpone").disabled = false;
+          document.getElementById("btnReset").disabled = false;
+        });
+    }
+
+    // Event Dropdown Change
+    document.getElementById("eventDropdown").addEventListener("change", function() {
+      loadLeaderboard(this.value);
+    });
+
+    // Admin: Postpone Event
+    document.getElementById("btnPostpone").addEventListener("click", () => {
+      const eventId = document.getElementById("eventDropdown").value;
+      if (!eventId) return;
+      fetch(`/postpone-event?eventId=${eventId}`, { method: "POST" })
+        .then(res => res.json())
+        .then(msg => alert(msg.message || "Event postponed successfully!"));
+    });
+
+    // Admin: Reset Leaderboard
+    document.getElementById("btnReset").addEventListener("click", () => {
+      const eventId = document.getElementById("eventDropdown").value;
+      if (!eventId) return;
+      if (!confirm("Are you sure you want to reset leaderboard?")) return;
+      fetch(`/reset-leaderboard?eventId=${eventId}`, { method: "POST" })
+        .then(res => res.json())
+        .then(msg => {
+          alert(msg.message || "Leaderboard reset successfully!");
+          loadLeaderboard(eventId);
+        });
+    });
+
+    // Edit Player Score
+    function editScore(playerId) {
+      const newWins = prompt("Enter new Wins count:");
+      if (newWins === null) return;
+      fetch(`/edit-score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, wins: newWins })
+      }).then(res => res.json())
+        .then(msg => {
+          alert(msg.message || "Score updated!");
+          loadLeaderboard(document.getElementById("eventDropdown").value);
+        });
+    }
+
+    // Remove Player
+    function removePlayer(playerId) {
+      if (!confirm("Remove this player from leaderboard?")) return;
+      fetch(`/remove-player`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId })
+      }).then(res => res.json())
+        .then(msg => {
+          alert(msg.message || "Player removed!");
+          loadLeaderboard(document.getElementById("eventDropdown").value);
+        });
+    }
+  </script>
+</body>
+</html>
