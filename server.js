@@ -844,52 +844,55 @@ app.get("/do-change-password", function (req, resp) {
   });
 });
 
-app.get("/leaderboard/:tournament_id", (req, res) => {
-  const tid = req.params.tournament_id;
-
-  const query = `
-    SELECT p.email, p.name, p.profilepic, e.sports,
-      SUM(CASE WHEN r.result='win' THEN 1 ELSE 0 END) AS wins,
-      SUM(CASE WHEN r.result='loss' THEN 1 ELSE 0 END) AS losses,
-      SUM(CASE WHEN r.result='draw' THEN 1 ELSE 0 END) AS draws,
-      COUNT(r.id) AS total
-    FROM match_results r
-    JOIN players p ON p.email = r.player_email
-    JOIN events e ON e.rid = r.tournament_id
-    WHERE r.tournament_id = ?
-    GROUP BY p.email, p.name, p.profilepic, e.sports
-    ORDER BY wins DESC, draws DESC, losses ASC;
-  `;
-
-  db.query(query, [tid], (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json(results);
-  });
+app.get("/leaderboard/:tid", async (req, res) => {
+  const tid = req.params.tid;
+  try {
+    const [rows] = await db.query(
+      `SELECT player_email,
+              SUM(result='win')   AS wins,
+              SUM(result='loss')  AS losses,
+              SUM(result='draw')  AS draws,
+              COUNT(*)            AS total
+       FROM match_results
+       WHERE tournament_id = ?
+       GROUP BY player_email`,
+      [tid]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).send("DB Error: " + err.message);
+  }
 });
 
-// ✅ API: Reset leaderboard (delete results for a tournament)
-app.delete("/leaderboard/:tournament_id/reset", (req, res) => {
-  const tid = req.params.tournament_id;
-  db.query("DELETE FROM match_results WHERE tournament_id = ?", [tid], (err) => {
-    if (err) return res.status(500).json({ error: err });
+// ✅ Postpone Match (update date)
+app.post("/postpone", async (req, res) => {
+  const { id, newDate } = req.body;
+  try {
+    await db.query("UPDATE match_results SET match_date=? WHERE id=?", [newDate, id]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    res.status(500).send("DB Error: " + err.message);
+  }
 });
 
-// ✅ API: Remove one player’s result
-app.delete("/leaderboard/result/:id", (req, res) => {
-  const id = req.params.id;
-  db.query("DELETE FROM match_results WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).json({ error: err });
+// ✅ Reset Leaderboard
+app.post("/reset", async (req, res) => {
+  const { tid } = req.body;
+  try {
+    await db.query("DELETE FROM match_results WHERE tournament_id=?", [tid]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    res.status(500).send("DB Error: " + err.message);
+  }
 });
 
-// ✅ API: Edit result
-app.put("/leaderboard/result/:id", (req, res) => {
-  const { result } = req.body;
-  db.query("UPDATE match_results SET result = ? WHERE id = ?", [result, req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err });
+// ✅ Remove Player Results
+app.delete("/remove/:email/:tid", async (req, res) => {
+  const { email, tid } = req.params;
+  try {
+    await db.query("DELETE FROM match_results WHERE player_email=? AND tournament_id=?", [email, tid]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    res.status(500).send("DB Error: " + err.message);
+  }
 });
