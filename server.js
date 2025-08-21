@@ -843,3 +843,53 @@ app.get("/do-change-password", function (req, resp) {
     }
   });
 });
+
+app.get("/leaderboard/:tournament_id", (req, res) => {
+  const tid = req.params.tournament_id;
+
+  const query = `
+    SELECT p.email, p.name, p.profilepic, e.sports,
+      SUM(CASE WHEN r.result='win' THEN 1 ELSE 0 END) AS wins,
+      SUM(CASE WHEN r.result='loss' THEN 1 ELSE 0 END) AS losses,
+      SUM(CASE WHEN r.result='draw' THEN 1 ELSE 0 END) AS draws,
+      COUNT(r.id) AS total
+    FROM match_results r
+    JOIN players p ON p.email = r.player_email
+    JOIN events e ON e.rid = r.tournament_id
+    WHERE r.tournament_id = ?
+    GROUP BY p.email, p.name, p.profilepic, e.sports
+    ORDER BY wins DESC, draws DESC, losses ASC;
+  `;
+
+  db.query(query, [tid], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
+// ✅ API: Reset leaderboard (delete results for a tournament)
+app.delete("/leaderboard/:tournament_id/reset", (req, res) => {
+  const tid = req.params.tournament_id;
+  db.query("DELETE FROM match_results WHERE tournament_id = ?", [tid], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ success: true });
+  });
+});
+
+// ✅ API: Remove one player’s result
+app.delete("/leaderboard/result/:id", (req, res) => {
+  const id = req.params.id;
+  db.query("DELETE FROM match_results WHERE id = ?", [id], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ success: true });
+  });
+});
+
+// ✅ API: Edit result
+app.put("/leaderboard/result/:id", (req, res) => {
+  const { result } = req.body;
+  db.query("UPDATE match_results SET result = ? WHERE id = ?", [result, req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ success: true });
+  });
+});
