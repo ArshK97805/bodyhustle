@@ -843,3 +843,29 @@ app.get("/do-change-password", function (req, resp) {
     }
   });
 });
+
+
+
+// Update Player Stats
+app.post("/update-player", (req, res) => {
+  const { id, wins, losses, draws } = req.body;
+  const total = (parseInt(wins) || 0) + (parseInt(losses) || 0) + (parseInt(draws) || 0);
+
+  db.query(
+    "UPDATE leaderboard SET wins=?, losses=?, draws=?, total_games=? WHERE id=?",
+    [wins, losses, draws, total, id],
+    (err) => {
+      if (err) return res.json({ message: "Error updating player", error: err });
+      res.json({ message: "Player updated successfully" });
+    }
+  );
+});
+
+// Delete Player
+app.delete("/delete-player/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM leaderboard WHERE id=?", [id], (err) => {
+    if (err) return res.json({ message: "Error deleting player", error: err });
+    res.json({ message: "Player deleted successfully" });
+  });
+});
