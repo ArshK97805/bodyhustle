@@ -845,15 +845,20 @@ app.get("/do-change-password", function (req, resp) {
 });
 
 
+// ===================== PLAYER ROUTES =====================
 
-// Update Player Stats
+// Update Player Details
 app.post("/update-player", (req, res) => {
-  const { id, wins, losses, draws } = req.body;
-  const total = (parseInt(wins) || 0) + (parseInt(losses) || 0) + (parseInt(draws) || 0);
+  const { email, name, dob, gender, contact, address, games, otherinfo, profilepic, aadhaarpic } = req.body;
+
+  const sql = `
+    UPDATE players 
+    SET name=?, dob=?, gender=?, contact=?, address=?, games=?, otherinfo=?, profilepic=?, aadhaarpic=?
+    WHERE email=?`;
 
   db.query(
-    "UPDATE leaderboard SET wins=?, losses=?, draws=?, total_games=? WHERE id=?",
-    [wins, losses, draws, total, id],
+    sql,
+    [name, dob, gender, contact, address, games, otherinfo, profilepic, aadhaarpic, email],
     (err) => {
       if (err) return res.json({ message: "Error updating player", error: err });
       res.json({ message: "Player updated successfully" });
@@ -862,10 +867,75 @@ app.post("/update-player", (req, res) => {
 });
 
 // Delete Player
-app.delete("/delete-player/:id", (req, res) => {
-  const { id } = req.params;
-  db.query("DELETE FROM leaderboard WHERE id=?", [id], (err) => {
+app.delete("/delete-player/:email", (req, res) => {
+  const { email } = req.params;
+
+  db.query("DELETE FROM players WHERE email=?", [email], (err) => {
     if (err) return res.json({ message: "Error deleting player", error: err });
     res.json({ message: "Player deleted successfully" });
+  });
+});
+
+
+// ===================== MATCH ROUTES =====================
+
+// Insert a New Match
+app.post("/add-match", (req, res) => {
+  const { event_id, player1_email, player2_email, scheduled_date, scheduled_time } = req.body;
+
+  const sql = `
+    INSERT INTO tournament_matches (event_id, player1_email, player2_email, scheduled_date, scheduled_time)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [event_id, player1_email, player2_email, scheduled_date, scheduled_time], (err, result) => {
+    if (err) return res.json({ message: "Error inserting match", error: err });
+    res.json({ message: "Match added successfully", matchId: result.insertId });
+  });
+});
+
+// Update Match (reschedule / postpone with reason)
+app.post("/update-match", (req, res) => {
+  const { match_id, scheduled_date, scheduled_time, status, postponed_reason, next_date } = req.body;
+
+  const sql = `
+    UPDATE tournament_matches
+    SET scheduled_date=?, scheduled_time=?, status=?, postponed_reason=?, next_date=?
+    WHERE match_id=?`;
+
+  db.query(
+    sql,
+    [scheduled_date, scheduled_time, status, postponed_reason, next_date, match_id],
+    (err) => {
+      if (err) return res.json({ message: "Error updating match", error: err });
+      res.json({ message: "Match updated successfully" });
+    }
+  );
+});
+
+// Delete Match
+app.delete("/delete-match/:match_id", (req, res) => {
+  const { match_id } = req.params;
+
+  db.query("DELETE FROM tournament_matches WHERE match_id=?", [match_id], (err) => {
+    if (err) return res.json({ message: "Error deleting match", error: err });
+    res.json({ message: "Match deleted successfully" });
+  });
+});
+
+// Fetch All Matches
+app.get("/get-matches", (req, res) => {
+  db.query("SELECT * FROM tournament_matches", (err, results) => {
+    if (err) return res.json({ message: "Error fetching matches", error: err });
+    res.json(results);
+  });
+});
+
+// Fetch Matches by Event
+app.get("/get-matches/:event_id", (req, res) => {
+  const { event_id } = req.params;
+  db.query("SELECT * FROM tournament_matches WHERE event_id=?", [event_id], (err, results) => {
+    if (err) return res.json({ message: "Error fetching event matches", error: err });
+    res.json(results);
   });
 });
