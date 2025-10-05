@@ -1059,3 +1059,52 @@ app.get("/matches", (req, res) => {
     res.json(results);
   });
 });
+app.post("/admin/add-leaderboard", async (req, res) => {
+  try {
+    const { eventId, email, game, wins, losses, draws } = req.body;
+
+    // Validation
+    if (!eventId || !email) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    const total = (parseInt(wins) || 0) + (parseInt(losses) || 0) + (parseInt(draws) || 0);
+
+    const sql = `
+      INSERT INTO leaderboard (eventId, email, game, wins, losses, draws, total_games)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        game = VALUES(game),
+        wins = VALUES(wins),
+        losses = VALUES(losses),
+        draws = VALUES(draws),
+        total_games = VALUES(total_games)
+    `;
+
+    await connection.query(sql, [eventId, email, game, wins, losses, draws, total]);
+    res.json({ message: "Leaderboard updated successfully ✅" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error while updating leaderboard ❌" });
+  }
+});
+
+
+app.post("/admin/delete-leaderboard", async (req, res) => {
+  try {
+    const { eventId, email } = req.body;
+
+    if (!eventId || !email) {
+      return res.status(400).json({ message: "Event ID and Email required." });
+    }
+
+    const sql = `DELETE FROM leaderboard WHERE eventId = ? AND email = ?`;
+    await connection.query(sql, [eventId, email]);
+    res.json({ message: "Player removed from leaderboard ❌" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error while deleting player ❌" });
+  }
+});
