@@ -23,6 +23,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 /// ------------------ Middleware Setup ------------------
 var app = express();//app() returns an Object:app
+app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));
 app.use(fileuploader());//for receiving files from client and save on server files
 
