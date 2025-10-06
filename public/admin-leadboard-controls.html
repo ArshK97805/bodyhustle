@@ -9,10 +9,8 @@
     body { background-color: #f4f6f9; }
     .container { max-width: 1100px; }
     .card { border-radius: 15px; }
-    .profile-pic {
-      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-    }
-    .btn-action { font-size: 0.8rem; }
+    .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .btn-action { font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -30,7 +28,7 @@
       </div>
     </div>
 
-    <!-- Add / Update Player Form -->
+    <!-- Add / Update / Delete Player Form -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5 class="mb-3 fw-semibold">Manage Player Leaderboard Data</h5>
@@ -57,9 +55,10 @@
               <input type="number" class="form-control" id="draws" value="0">
             </div>
           </div>
-          <div class="mt-3">
-            <button type="button" class="btn btn-success me-2" id="btnAdd">Add / Update Player</button>
-            <button type="button" class="btn btn-danger" id="btnDelete">Delete Player</button>
+          <div class="mt-4">
+            <button type="button" class="btn btn-success me-2" id="btnAdd">➕ Add Player</button>
+            <button type="button" class="btn btn-warning me-2" id="btnUpdate">📝 Update Player</button>
+            <button type="button" class="btn btn-danger" id="btnDelete">🗑️ Delete Player</button>
           </div>
         </form>
       </div>
@@ -73,7 +72,7 @@
           <thead class="table-dark">
             <tr>
               <th>#</th>
-              <th>Player</th>
+              <th>Email</th>
               <th>Game</th>
               <th>Wins</th>
               <th>Losses</th>
@@ -88,7 +87,7 @@
   </div>
 
   <script>
-    // Load Events
+    // ✅ Load Events
     fetch("/events")
       .then(res => res.json())
       .then(events => {
@@ -101,7 +100,7 @@
         });
       });
 
-    // Load Leaderboard
+    // ✅ Load Leaderboard
     function loadLeaderboard(eventId) {
       if (!eventId) return;
       fetch(`/leaderboard?eventId=${eventId}`)
@@ -113,55 +112,37 @@
             tbody.innerHTML += `
               <tr>
                 <td>${i + 1}</td>
-                <td><img src="${p.profilepic || 'default-pic.png'}" class="profile-pic me-2">${p.name}</td>
-                <td>${p.games || '-'}</td>
-                <td>${p.wins || 0}</td>
-                <td>${p.losses || 0}</td>
-                <td>${p.draws || 0}</td>
-                <td>${p.total_games || 0}</td>
+                <td>${p.email}</td>
+                <td>${p.game}</td>
+                <td>${p.wins}</td>
+                <td>${p.losses}</td>
+                <td>${p.draws}</td>
+                <td>${p.total_games}</td>
               </tr>`;
           });
         });
     }
 
-    // On event change
+    // On Event Change
     document.getElementById("eventDropdown").addEventListener("change", function() {
       loadLeaderboard(this.value);
     });
 
-    // Add / Update Player
+    // ✅ Add Player
     document.getElementById("btnAdd").addEventListener("click", () => {
-      const eventId = document.getElementById("eventDropdown").value;
-      const playerData = {
-        eventId,
-        email: document.getElementById("playerEmail").value,
-        game: document.getElementById("game").value,
-        wins: document.getElementById("wins").value,
-        losses: document.getElementById("losses").value,
-        draws: document.getElementById("draws").value
-      };
-
-      if (!eventId) return alert("Please select an event first.");
-
-      fetch("/admin/add-leaderboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(playerData)
-      })
-      .then(res => res.json())
-      .then(resp => {
-        alert(resp.message);
-        loadLeaderboard(eventId);
-      });
+      modifyPlayer("/admin/add-leaderboard", "Player Added!");
     });
 
-    // Delete Player
+    // ✅ Update Player
+    document.getElementById("btnUpdate").addEventListener("click", () => {
+      modifyPlayer("/admin/update-leaderboard", "Player Updated!");
+    });
+
+    // ✅ Delete Player
     document.getElementById("btnDelete").addEventListener("click", () => {
       const eventId = document.getElementById("eventDropdown").value;
       const email = document.getElementById("playerEmail").value;
-
-      if (!eventId || !email) return alert("Select event and enter player email.");
-
+      if (!eventId || !email) return alert("Select event and enter player email first!");
       fetch("/admin/delete-leaderboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -173,6 +154,32 @@
         loadLeaderboard(eventId);
       });
     });
+
+    // Common Add/Update Function
+    function modifyPlayer(url, successMsg) {
+      const eventId = document.getElementById("eventDropdown").value;
+      const playerData = {
+        eventId,
+        email: document.getElementById("playerEmail").value,
+        game: document.getElementById("game").value,
+        wins: document.getElementById("wins").value,
+        losses: document.getElementById("losses").value,
+        draws: document.getElementById("draws").value
+      };
+
+      if (!eventId) return alert("Please select an event first!");
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(playerData)
+      })
+      .then(res => res.json())
+      .then(resp => {
+        alert(resp.message || successMsg);
+        loadLeaderboard(eventId);
+      });
+    }
   </script>
 
 </body>
