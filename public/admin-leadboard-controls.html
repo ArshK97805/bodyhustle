@@ -1,186 +1,187 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Leaderboard Control</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #f4f6f9; }
-    .container { max-width: 1100px; }
-    .card { border-radius: 15px; }
-    .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-    .btn-action { font-size: 0.85rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Leaderboard Control</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background-color: #f4f6f9; }
+  .container { max-width: 1100px; }
+  .card { border-radius: 15px; }
+</style>
 </head>
 <body>
+<div class="container my-5">
+  <h2 class="text-center mb-4 fw-bold">🏆 Admin Leaderboard Control Panel</h2>
 
-  <div class="container my-5">
-    <h2 class="text-center mb-4 fw-bold">🏆 Admin Leaderboard Control Panel</h2>
-
-    <!-- Event Selector -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5 class="mb-3 fw-semibold">Select Event</h5>
-        <select id="eventDropdown" class="form-select">
-          <option value="">-- Select Event --</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Add / Update / Delete Player Form -->
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5 class="mb-3 fw-semibold">Manage Player Leaderboard Data</h5>
-        <form id="leaderboardForm">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Player Email</label>
-              <input type="email" class="form-control" id="playerEmail" placeholder="Enter player email" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Game</label>
-              <input type="text" class="form-control" id="game" placeholder="e.g. Football" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Wins</label>
-              <input type="number" class="form-control" id="wins" value="0">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Losses</label>
-              <input type="number" class="form-control" id="losses" value="0">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Draws</label>
-              <input type="number" class="form-control" id="draws" value="0">
-            </div>
-          </div>
-          <div class="mt-4">
-            <button type="button" class="btn btn-success me-2" id="btnAdd">➕ Add Player</button>
-            <button type="button" class="btn btn-warning me-2" id="btnUpdate">📝 Update Player</button>
-            <button type="button" class="btn btn-danger" id="btnDelete">🗑️ Delete Player</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Current Leaderboard Display -->
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="mb-3 fw-semibold">Current Leaderboard</h5>
-        <table class="table table-hover align-middle">
-          <thead class="table-dark">
-            <tr>
-              <th>#</th>
-              <th>Email</th>
-              <th>Game</th>
-              <th>Wins</th>
-              <th>Losses</th>
-              <th>Draws</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboardBody"></tbody>
-        </table>
-      </div>
+  <!-- Event Selector -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5>Select Event</h5>
+      <select id="eventDropdown" class="form-select">
+        <option value="">-- Select Event --</option>
+      </select>
     </div>
   </div>
 
-  <script>
-    // ✅ Load Events
-    fetch("/events")
+  <!-- Player Form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5>Manage Player Leaderboard Data</h5>
+      <form id="leaderboardForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label>Player Email</label>
+            <input type="email" id="playerEmail" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label>Player Name (optional)</label>
+            <input type="text" id="playerName" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label>Game</label>
+            <input type="text" id="game" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label>Wins</label>
+            <input type="number" id="wins" class="form-control" value="0">
+          </div>
+          <div class="col-md-3">
+            <label>Losses</label>
+            <input type="number" id="losses" class="form-control" value="0">
+          </div>
+          <div class="col-md-3">
+            <label>Draws</label>
+            <input type="number" id="draws" class="form-control" value="0">
+          </div>
+        </div>
+        <div class="mt-4">
+          <button type="button" class="btn btn-success me-2" id="btnAdd">➕ Add Player</button>
+          <button type="button" class="btn btn-warning me-2" id="btnUpdate">📝 Update Player</button>
+          <button type="button" class="btn btn-danger" id="btnDelete">🗑️ Delete Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5>Current Leaderboard</h5>
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Player Name</th>
+            <th>Game</th>
+            <th>Wins</th>
+            <th>Losses</th>
+            <th>Draws</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Load Events
+  fetch("/events")
+    .then(res => res.json())
+    .then(events => {
+      const dropdown = document.getElementById("eventDropdown");
+      events.forEach(ev => {
+        const opt = document.createElement("option");
+        opt.value = ev.eventId;
+        opt.textContent = `${ev.event} (${ev.sports})`;
+        dropdown.appendChild(opt);
+      });
+    });
+
+  // Load leaderboard
+  function loadLeaderboard(eventId) {
+    if (!eventId) return;
+    fetch(`/leaderboard?eventId=${eventId}`)
       .then(res => res.json())
-      .then(events => {
-        const dropdown = document.getElementById("eventDropdown");
-        events.forEach(ev => {
-          const opt = document.createElement("option");
-          opt.value = ev.rid;
-          opt.textContent = `${ev.event} (${ev.sports})`;
-          dropdown.appendChild(opt);
+      .then(data => {
+        const tbody = document.getElementById("leaderboardBody");
+        tbody.innerHTML = "";
+        data.forEach((p,i)=>{
+          tbody.innerHTML += `
+          <tr onclick="fillForm('${p.email}','${p.playerName}','${p.game}','${p.wins}','${p.losses}','${p.draws}')">
+            <td>${i+1}</td>
+            <td>${p.email}</td>
+            <td>${p.playerName||''}</td>
+            <td>${p.game}</td>
+            <td>${p.wins}</td>
+            <td>${p.losses}</td>
+            <td>${p.draws}</td>
+            <td>${p.total_games}</td>
+          </tr>`;
         });
       });
+  }
 
-    // ✅ Load Leaderboard
-    function loadLeaderboard(eventId) {
-      if (!eventId) return;
-      fetch(`/leaderboard?eventId=${eventId}`)
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.getElementById("leaderboardBody");
-          tbody.innerHTML = "";
-          data.forEach((p, i) => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${i + 1}</td>
-                <td>${p.email}</td>
-                <td>${p.game}</td>
-                <td>${p.wins}</td>
-                <td>${p.losses}</td>
-                <td>${p.draws}</td>
-                <td>${p.total_games}</td>
-              </tr>`;
-          });
-        });
-    }
+  document.getElementById("eventDropdown").addEventListener("change", function() {
+    loadLeaderboard(this.value);
+  });
 
-    // On Event Change
-    document.getElementById("eventDropdown").addEventListener("change", function() {
-      loadLeaderboard(this.value);
+  // Fill form when row clicked
+  function fillForm(email,name,game,wins,losses,draws){
+    document.getElementById("playerEmail").value = email;
+    document.getElementById("playerName").value = name;
+    document.getElementById("game").value = game;
+    document.getElementById("wins").value = wins;
+    document.getElementById("losses").value = losses;
+    document.getElementById("draws").value = draws;
+  }
+
+  // Add / Update Player
+  function modifyPlayer(url){
+    const eventId = document.getElementById("eventDropdown").value;
+    const playerData = {
+      eventId,
+      email: document.getElementById("playerEmail").value,
+      playerName: document.getElementById("playerName").value,
+      game: document.getElementById("game").value,
+      wins: document.getElementById("wins").value,
+      losses: document.getElementById("losses").value,
+      draws: document.getElementById("draws").value
+    };
+    if(!eventId || !playerData.email) return alert("Select event and enter email!");
+
+    fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(playerData)
+    })
+    .then(res=>res.json())
+    .then(resp=>{
+      alert(resp.message);
+      loadLeaderboard(eventId);
     });
+  }
 
-    // ✅ Add Player
-    document.getElementById("btnAdd").addEventListener("click", () => {
-      modifyPlayer("/admin/add-leaderboard", "Player Added!");
+  document.getElementById("btnAdd").addEventListener("click", ()=>modifyPlayer("/admin/add-leaderboard"));
+  document.getElementById("btnUpdate").addEventListener("click", ()=>modifyPlayer("/admin/add-leaderboard")); // same route
+  document.getElementById("btnDelete").addEventListener("click", ()=>{
+    const eventId = document.getElementById("eventDropdown").value;
+    const email = document.getElementById("playerEmail").value;
+    if(!eventId || !email) return alert("Select event and enter email!");
+    fetch("/admin/delete-leaderboard",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({eventId,email})
+    }).then(res=>res.json()).then(resp=>{
+      alert(resp.message);
+      loadLeaderboard(eventId);
     });
+  });
 
-    // ✅ Update Player
-    document.getElementById("btnUpdate").addEventListener("click", () => {
-      modifyPlayer("/admin/update-leaderboard", "Player Updated!");
-    });
-
-    // ✅ Delete Player
-    document.getElementById("btnDelete").addEventListener("click", () => {
-      const eventId = document.getElementById("eventDropdown").value;
-      const email = document.getElementById("playerEmail").value;
-      if (!eventId || !email) return alert("Select event and enter player email first!");
-      fetch("/admin/delete-leaderboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, email })
-      })
-      .then(res => res.json())
-      .then(resp => {
-        alert(resp.message);
-        loadLeaderboard(eventId);
-      });
-    });
-
-    // Common Add/Update Function
-    function modifyPlayer(url, successMsg) {
-      const eventId = document.getElementById("eventDropdown").value;
-      const playerData = {
-        eventId,
-        email: document.getElementById("playerEmail").value,
-        game: document.getElementById("game").value,
-        wins: document.getElementById("wins").value,
-        losses: document.getElementById("losses").value,
-        draws: document.getElementById("draws").value
-      };
-
-      if (!eventId) return alert("Please select an event first!");
-
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(playerData)
-      })
-      .then(res => res.json())
-      .then(resp => {
-        alert(resp.message || successMsg);
-        loadLeaderboard(eventId);
-      });
-    }
-  </script>
-
+</script>
 </body>
 </html>
