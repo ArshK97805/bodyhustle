@@ -875,9 +875,10 @@ app.post("/admin/add-leaderboard", (req, res) => {
   const total = Number(wins) + Number(losses) + Number(draws);
 
   const query = `
-    INSERT INTO leaderboard (eventId, email, game, wins, losses, draws, total_games)
+    INSERT INTO leaderboard (eventId, email, playerName, game, wins, losses, draws, total_games)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
+    playerName = VALUES(playerName),
       game = VALUES(game),
       wins = VALUES(wins),
       losses = VALUES(losses),
