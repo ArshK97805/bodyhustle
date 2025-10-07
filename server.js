@@ -875,7 +875,7 @@ app.post("/admin/add-leaderboard", (req, res) => {
   const total = Number(wins) + Number(losses) + Number(draws);
 
   const query = `
-    INSERT INTO leaderboard (eventId, email, playerName, game, wins, losses, draws, total_games)
+    INSERT INTO leaderboard (eventId, email,playerName, game, wins, losses, draws, total_games)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
     playerName = VALUES(playerName),
@@ -886,7 +886,7 @@ app.post("/admin/add-leaderboard", (req, res) => {
       total_games = VALUES(total_games)
   `;
 
-  mySqlVen.query(query, [eventId, email, game, wins, losses, draws, total], (err, result) => {
+  mySqlVen.query(query, [eventId, email,playerName||null, game, wins, losses, draws, total], (err, result) => {
     if (err) res.status(500).send({ message: "Server Error: " + err.message });
     else res.json({ message: "Player data added/updated successfully!" });
   });
